@@ -1,24 +1,7 @@
 export const dynamic = 'force-dynamic';
 
-import { createClient } from '@supabase/supabase-js';
 import ArtworkGrid from '@/components/ArtworkGrid';
-
-async function getPortfolioArtworks() {
-  try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    );
-    const { data } = await supabase
-      .from('artworks')
-      .select('*')
-      .in('section', ['portfolio', 'shop'])
-      .eq('show_on_website', true)
-      .order('display_order', { ascending: true })
-      .order('created_at', { ascending: false });
-    return data || [];
-  } catch { return []; }
-}
+import { getPortfolioArtworks } from '@/lib/shopify';
 
 export default async function PortfolioPage() {
   const artworks = await getPortfolioArtworks();

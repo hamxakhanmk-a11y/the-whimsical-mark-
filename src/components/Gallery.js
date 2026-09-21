@@ -1,27 +1,10 @@
-import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import BalancedArtworkImage from '@/components/BalancedArtworkImage';
 import { isRoundArtwork } from '@/data/artworkPresentation';
-
-async function getNewestArtworks() {
-  try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    );
-    const { data } = await supabase
-      .from('artworks')
-      .select('*')
-      .eq('show_on_home', true)
-      .eq('show_on_website', true)
-      .order('created_at', { ascending: false })
-      .limit(4);
-    return data || [];
-  } catch { return []; }
-}
+import { getNewestArtworks } from '@/lib/shopify';
 
 export default async function Gallery() {
-  const artworks = await getNewestArtworks();
+  const artworks = await getNewestArtworks(4);
 
   return (
     <section id="gallery" className="py-24 bg-white">

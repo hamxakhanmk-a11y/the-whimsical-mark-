@@ -1,28 +1,11 @@
 export const dynamic = 'force-dynamic';
 
-import { createClient } from '@supabase/supabase-js';
 import ArtworkGrid from '@/components/ArtworkGrid';
 import CommissionInquiry from '@/components/CommissionInquiry';
-
-async function getCommissions() {
-  try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    );
-    const { data } = await supabase
-      .from('artworks')
-      .select('*')
-      .eq('section', 'commissions')
-      .eq('show_on_website', true)
-      .order('display_order', { ascending: true })
-      .order('created_at', { ascending: false });
-    return data || [];
-  } catch { return []; }
-}
+import { getCommissionArtworks } from '@/lib/shopify';
 
 export default async function CommissionsPage() {
-  const artworks = await getCommissions();
+  const artworks = await getCommissionArtworks();
 
   return (
     <>

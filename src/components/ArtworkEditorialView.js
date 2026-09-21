@@ -2,7 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { isRoundArtwork } from '@/data/artworkPresentation';
 
-export default function ArtworkEditorialView({ artwork, images, whatsappNumber }) {
+export default function ArtworkEditorialView({ artwork, images, whatsappNumber, checkoutUrl }) {
   const cover = images[0];
   const secondary = images.slice(1);
   const projectNumber = String(artwork.display_order || artwork.id || 1).padStart(2, '0');
@@ -117,9 +117,16 @@ export default function ArtworkEditorialView({ artwork, images, whatsappNumber }
               </p>
             </div>
             {artwork.available && (
-              <a href={`https://wa.me/${whatsappNumber}?text=${whatsappMsg}`} target="_blank" rel="noopener noreferrer" className="inline-flex justify-center bg-[#075f8f] px-7 py-4 text-[10px] uppercase tracking-[0.2em] text-white transition hover:bg-[#ed7189]">
-                Inquire to Purchase
-              </a>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                {checkoutUrl && checkoutUrl !== '#' && (
+                  <a href={checkoutUrl} className="inline-flex justify-center bg-[#075f8f] px-7 py-4 text-[10px] uppercase tracking-[0.2em] text-white transition hover:bg-[#ed7189]">
+                    Buy Now
+                  </a>
+                )}
+                <a href={`https://wa.me/${whatsappNumber}?text=${whatsappMsg}`} target="_blank" rel="noopener noreferrer" className="inline-flex justify-center border border-[#075f8f] px-7 py-4 text-[10px] uppercase tracking-[0.2em] text-[#075f8f] transition hover:bg-[#075f8f] hover:text-white">
+                  Ask on WhatsApp
+                </a>
+              </div>
             )}
           </footer>
         </div>
