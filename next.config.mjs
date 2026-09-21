@@ -11,6 +11,11 @@ const nextConfig = {
         hostname: supabaseHostname,
         pathname: '/storage/v1/object/public/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'cdn.shopify.com',
+        pathname: '/**',
+      },
     ],
     formats: ['image/webp'],
     minimumCacheTTL: 86400,
