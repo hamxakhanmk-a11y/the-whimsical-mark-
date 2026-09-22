@@ -19,7 +19,7 @@ function titleCase(text) {
     .join(' ');
 }
 
-function extractSeriesName(tags) {
+function extractSeriesTagName(tags) {
   if (!Array.isArray(tags)) return null;
   const tag = tags.find(t => typeof t === 'string' && t.toLowerCase().startsWith('series:'));
   if (!tag) return null;
@@ -43,8 +43,8 @@ export function shopifyToArtwork(product) {
   };
   const normalizedTags = tags.map(t => String(t).toLowerCase());
 
-  const seriesName = extractSeriesName(tags);
-  const seriesSlug = seriesName ? slugify(seriesName) : null;
+  const seriesTagName = extractSeriesTagName(tags);
+  const seriesTagSlug = seriesTagName ? slugify(seriesTagName) : null;
 
   let section = 'portfolio';
   if (normalizedTags.includes('commissions') || String(product.product_type || '').toLowerCase() === 'commissions') {
@@ -66,8 +66,9 @@ export function shopifyToArtwork(product) {
     section,
     display_order: parseInt(String(product.id).slice(-3), 10) || 1,
     tags,
-    series_name: seriesName,
-    series_slug: seriesSlug,
+    // Series info from tag (if used); collection-based series is added separately
+    series_name: seriesTagName,
+    series_slug: seriesTagSlug,
     images: (product.images || []).map(img => ({
       id: img.id,
       image_url: img.src,
@@ -98,7 +99,17 @@ async function fetchProductByHandle(handle) {
   } catch { return null; }
 }
 
-// Fetch products belonging to a specific Shopify collection (by handle)
+async function fetchAllCollections() {
+  if (!STORE_DOMAIN) return [];
+  try {
+    const url = `https://${STORE_DOMAIN}/collections.json?limit=250`;
+    const res = await fetch(url, { next: { revalidate: 60 } });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return Array.isArray(json.collections) ? json.collections : [];
+  } catch { return []; }
+}
+
 async function fetchCollectionProducts(handle) {
   if (!STORE_DOMAIN || !handle) return [];
   try {
@@ -110,45 +121,84 @@ async function fetchCollectionProducts(handle) {
   } catch { return []; }
 }
 
-// Try common commission collection handles Shopify might have generated
-async function getCommissionProductIds() {
-  const handles = ['commissions', 'commission', 'commissioned', 'commissioned-works'];
-  const idSet = new Set();
-  for (const h of handles) {
-    const list = await fetchCollectionProducts(h);
-    list.forEach(p => idSet.add(p.id));
-    if (list.length > 0) break; // stop once one collection has products
-  }
-  return idSet;
+// Collections whose title starts with "series" — each one is a separate series
+async function fetchSeriesCollections() {
+  const all = await fetchAllCollections();
+  return all.filter(c =>
+    /^series\b/i.test(String(c.title || '')) ||
+    /^series[-_ ]/i.test(String(c.handle || ''))
+  );
 }
 
-async function getSeriesProductIds() {
-  const list = await fetchCollectionProducts('series');
-  return new Set(list.map(p => p.id));
+async function fetchCommissionProductIds() {
+  const handles = ['commissions', 'commission', 'commissioned', 'commissioned-works'];
+  for (const h of handles) {
+    const list = await fetchCollectionProducts(h);
+    if (list.length > 0) return new Set(list.map(p => p.id));
+  }
+  return new Set();
 }
 
 // Portfolio page: regular artworks + one card per series
 export async function getPortfolioAndSeries() {
-  const [allProducts, commissionIds] = await Promise.all([
+  const [allProducts, commissionIds, seriesCollections] = await Promise.all([
     fetchAllProducts(),
-    getCommissionProductIds(),
+    fetchCommissionProductIds(),
+    fetchSeriesCollections(),
   ]);
 
-  // Everything NOT in commissions collection AND NOT tagged as commissions
-  const portfolioProducts = allProducts.filter(p => {
+  // Fetch products for each series collection in parallel
+  const seriesData = await Promise.all(
+    seriesCollections.map(async (col) => {
+      const products = await fetchCollectionProducts(col.handle);
+      return {
+        collection: col,
+        products,
+        productIds: new Set(products.map(p => p.id)),
+      };
+    })
+  );
+
+  // Any product that lives in a series collection is NOT shown as an individual card
+  const idsInSeriesCollections = new Set();
+  seriesData.forEach(s => s.productIds.forEach(id => idsInSeriesCollections.add(id)));
+
+  // Individuals = not commission, not in a series collection, no series tag
+  const individualsRaw = allProducts.filter(p => {
     if (commissionIds.has(p.id)) return false;
-    const artwork = shopifyToArtwork(p);
-    return artwork && artwork.section !== 'commissions';
+    if (idsInSeriesCollections.has(p.id)) return false;
+    const a = shopifyToArtwork(p);
+    if (!a) return false;
+    if (a.section === 'commissions') return false;
+    if (a.series_slug) return false; // series-by-tag also gets grouped
+    return true;
   });
+  const individuals = individualsRaw.map(shopifyToArtwork).filter(Boolean);
 
-  const all = portfolioProducts.map(shopifyToArtwork).filter(Boolean);
-  const individuals = all.filter(a => !a.series_slug);
+  // Collection-based series cards
+  const collectionSeriesCards = seriesData
+    .filter(s => s.products.length > 0)
+    .map(s => {
+      const artworks = s.products.map(shopifyToArtwork).filter(Boolean);
+      return {
+        is_series: true,
+        slug: s.collection.handle,
+        name: s.collection.title,
+        cover_image: artworks[0]?.image_url || '',
+        artworks,
+      };
+    });
 
-  const seriesMap = new Map();
-  for (const a of all) {
-    if (!a.series_slug) continue;
-    if (!seriesMap.has(a.series_slug)) {
-      seriesMap.set(a.series_slug, {
+  // Tag-based series cards (from products with "series:name" tag,
+  // but only those that aren't already in a series collection)
+  const tagSeriesMap = new Map();
+  for (const p of allProducts) {
+    if (commissionIds.has(p.id)) continue;
+    if (idsInSeriesCollections.has(p.id)) continue;
+    const a = shopifyToArtwork(p);
+    if (!a || !a.series_slug || a.section === 'commissions') continue;
+    if (!tagSeriesMap.has(a.series_slug)) {
+      tagSeriesMap.set(a.series_slug, {
         is_series: true,
         slug: a.series_slug,
         name: a.series_name || titleCase(a.series_slug),
@@ -156,24 +206,22 @@ export async function getPortfolioAndSeries() {
         artworks: [],
       });
     }
-    seriesMap.get(a.series_slug).artworks.push(a);
+    tagSeriesMap.get(a.series_slug).artworks.push(a);
   }
-  const seriesCards = Array.from(seriesMap.values());
+  const tagSeriesCards = Array.from(tagSeriesMap.values());
 
-  return { individuals, series: seriesCards };
+  const series = [...collectionSeriesCards, ...tagSeriesCards];
+  return { individuals, series };
 }
 
 export async function getCommissionArtworks() {
   const [allProducts, commissionIds] = await Promise.all([
     fetchAllProducts(),
-    getCommissionProductIds(),
+    fetchCommissionProductIds(),
   ]);
-  const commissionProducts = allProducts.filter(p => {
-    if (commissionIds.has(p.id)) return true;
-    const artwork = shopifyToArtwork(p);
-    return artwork && artwork.section === 'commissions';
-  });
-  return commissionProducts
+  return allProducts
+    .filter(p => commissionIds.has(p.id) || String(p.product_type || '').toLowerCase() === 'commissions' ||
+      (Array.isArray(p.tags) && p.tags.map(t => String(t).toLowerCase()).includes('commissions')))
     .map(p => {
       const a = shopifyToArtwork(p);
       if (a) a.section = 'commissions';
@@ -192,11 +240,25 @@ export async function getArtworkByHandle(handle) {
   return shopifyToArtwork(product);
 }
 
+// Given a series slug, return the series (from either collection or tag)
 export async function getSeriesBySlug(slug) {
+  // Try collection first
+  const collectionProducts = await fetchCollectionProducts(slug);
+  if (collectionProducts.length > 0) {
+    // Get collection info for the title
+    const allCollections = await fetchAllCollections();
+    const col = allCollections.find(c => c.handle === slug);
+    const artworks = collectionProducts.map(shopifyToArtwork).filter(Boolean);
+    return {
+      slug,
+      name: col?.title || titleCase(slug),
+      cover_image: artworks[0]?.image_url || '',
+      artworks,
+    };
+  }
+  // Fall back to tag-based
   const products = await fetchAllProducts();
-  const artworks = products
-    .map(shopifyToArtwork)
-    .filter(a => a && a.series_slug === slug);
+  const artworks = products.map(shopifyToArtwork).filter(a => a && a.series_slug === slug);
   if (artworks.length === 0) return null;
   return {
     slug,
