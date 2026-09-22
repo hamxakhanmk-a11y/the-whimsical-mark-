@@ -116,18 +116,26 @@ export default function ArtworkEditorialView({ artwork, images, whatsappNumber, 
                 {artwork.available ? 'Interested in making this piece yours?' : 'This piece has found its home.'}
               </p>
             </div>
-            {artwork.available && (
-              <div className="flex flex-col gap-3 sm:flex-row">
-                {checkoutUrl && checkoutUrl !== '#' && (
-                  <a href={checkoutUrl} className="inline-flex justify-center bg-[#2d7d6b] px-7 py-4 text-[10px] uppercase tracking-[0.2em] text-white transition hover:bg-[#c19875]">
-                    Buy Now
-                  </a>
-                )}
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              {artwork.available && checkoutUrl && checkoutUrl !== '#' && (
+                <a href={checkoutUrl} className="inline-flex justify-center bg-[#2d7d6b] px-7 py-4 text-[10px] uppercase tracking-[0.2em] text-white transition hover:bg-[#c19875]">
+                  Buy Now
+                </a>
+              )}
+              {artwork.available && (
                 <a href={`https://wa.me/${whatsappNumber}?text=${whatsappMsg}`} target="_blank" rel="noopener noreferrer" className="inline-flex justify-center border border-[#2d7d6b] px-7 py-4 text-[10px] uppercase tracking-[0.2em] text-[#2d7d6b] transition hover:bg-[#2d7d6b] hover:text-white">
                   Ask on WhatsApp
                 </a>
-              </div>
-            )}
+              )}
+              <a
+                href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Hi! I would like to commission a piece inspired by "${artwork.title}".`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex justify-center bg-[#c19875] px-7 py-4 text-[10px] uppercase tracking-[0.2em] text-white transition hover:bg-[#2d7d6b]"
+              >
+                Commission a Piece
+              </a>
+            </div>
           </footer>
         </div>
       </article>

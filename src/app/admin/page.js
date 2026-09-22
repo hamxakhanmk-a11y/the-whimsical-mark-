@@ -1662,6 +1662,54 @@ export default function AdminPage() {
                 className="border border-neutral-300 px-4 py-2.5 text-sm focus:outline-none focus:border-neutral-700 resize-y"
               />
             </div>
+
+            {/* ── Commission section text (shown on /commissions page) ── */}
+            <div>
+              <h2 className="text-2xl font-light mt-6" style={{ fontFamily: 'var(--font-cormorant)' }}>
+                Commission Section
+              </h2>
+              <p className="text-sm text-neutral-500 mt-1">
+                Text shown on the &quot;Commission a Piece&quot; card at the bottom of the Commissions page.
+              </p>
+            </div>
+
+            {[
+              { key: 'commission_eyebrow', label: 'Eyebrow (tiny label above title)', placeholder: 'Made Especially for You', type: 'input' },
+              { key: 'commission_title', label: 'Title', placeholder: 'Commission a Piece', type: 'input' },
+              { key: 'commission_subtitle', label: 'Subtitle', placeholder: "Let's create something meaningful", type: 'input' },
+              { key: 'commission_description', label: 'Description', placeholder: 'I create original, hand-painted artworks tailored to your story, space, and vision.', type: 'textarea' },
+              { key: 'commission_status', label: 'Status note (badge at bottom)', placeholder: 'Currently accepting commissions', type: 'input' },
+            ].map(({ key, label, placeholder, type }) => (
+              <div key={key} className="bg-white border border-neutral-200 p-6 flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs tracking-wider uppercase text-neutral-500">{label}</label>
+                  <button
+                    onClick={() => saveSiteText(key)}
+                    disabled={savingText === key}
+                    className="bg-neutral-900 text-white text-[11px] tracking-[0.2em] uppercase px-5 py-2 hover:bg-neutral-700 transition-colors disabled:opacity-40"
+                  >
+                    {savingText === key ? 'Saving…' : 'Save'}
+                  </button>
+                </div>
+                {type === 'textarea' ? (
+                  <textarea
+                    rows={4}
+                    value={siteText[key] || ''}
+                    placeholder={placeholder}
+                    onChange={e => setSiteText({ ...siteText, [key]: e.target.value })}
+                    className="border border-neutral-300 px-4 py-2.5 text-sm focus:outline-none focus:border-neutral-700 resize-y"
+                  />
+                ) : (
+                  <input
+                    type="text"
+                    value={siteText[key] || ''}
+                    placeholder={placeholder}
+                    onChange={e => setSiteText({ ...siteText, [key]: e.target.value })}
+                    className="border border-neutral-300 px-4 py-2.5 text-sm focus:outline-none focus:border-neutral-700"
+                  />
+                )}
+              </div>
+            ))}
           </div>
         )}
 

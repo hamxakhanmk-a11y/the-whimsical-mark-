@@ -22,25 +22,32 @@ export default async function CommissionInquiry({ compact = false }) {
   const instagram = /^https?:\/\//i.test(instagramValue)
     ? instagramValue
     : `https://www.instagram.com/${String(instagramValue).replace(/^@/, '')}/`;
+
+  const eyebrow = text.commission_eyebrow || 'Made Especially for You';
+  const title = text.commission_title || 'Commission a Piece';
+  const subtitle = text.commission_subtitle || "Let's create something meaningful";
+  const description = text.commission_description || 'I create original, hand-painted artworks tailored to your story, space, and vision. Every commission is a collaborative journey.';
+  const statusNote = text.commission_status || 'Currently accepting commissions';
+
   return (
     <section className={`commission-inquiry ${compact ? 'commission-inquiry-home' : ''}`}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="overflow-hidden border border-[#2d7d6b]/20 bg-[#fffaf2] shadow-[0_24px_70px_rgba(6,58,91,.12)]">
           <div className="grid lg:grid-cols-[1.22fr_.78fr]">
             <div className="border-b border-[#2d7d6b]/20 p-6 sm:p-10 lg:border-b-0 lg:border-r lg:p-14">
-              <p className="mb-3 text-xs uppercase tracking-[0.32em] text-[#c19875]">Made Especially for You</p>
+              <p className="mb-3 text-xs uppercase tracking-[0.32em] text-[#c19875]">{eyebrow}</p>
               <h2 className="text-4xl font-light leading-none text-[#1f4d43] sm:text-5xl lg:text-6xl" style={{ fontFamily: 'var(--font-cormorant)' }}>
-                Commission a Piece
+                {title}
               </h2>
               <p className="mt-4 text-xl italic text-[#2d7d6b] sm:text-2xl" style={{ fontFamily: 'var(--font-cormorant)' }}>
-                Let&apos;s create something meaningful
+                {subtitle}
               </p>
-              <p className="mt-7 max-w-2xl text-sm leading-7 text-[#1f3a2f]/75 sm:text-base">
-                I create original, hand-painted artworks tailored to your story, space, and vision. Every commission is a collaborative journey.
+              <p className="mt-7 max-w-2xl text-sm leading-7 text-[#1f3a2f]/75 sm:text-base whitespace-pre-line">
+                {description}
               </p>
 
               <div className="mt-10 border border-[#c19875]/35 bg-[#c19875]/8 px-5 py-5 text-center text-sm tracking-wide text-[#2d7d6b]">
-                Currently accepting commissions
+                {statusNote}
               </div>
             </div>
 
