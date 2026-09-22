@@ -121,13 +121,29 @@ async function fetchCollectionProducts(handle) {
   } catch { return []; }
 }
 
-// Collections whose title starts with "series" — each one is a separate series
+// Every collection that isn't Portfolio/Commissions is treated as a series
+// (user can name them anything: "Starry Nights", "Ocean Dreams", etc.)
 async function fetchSeriesCollections() {
+  const excludedHandles = new Set([
+    'portfolio', 'portfolios',
+    'commissions', 'commission', 'commissioned', 'commissioned-works',
+    'comissions', 'comission', 'comissioned',
+    'frontpage', 'all', 'home', 'homepage',
+  ]);
+  const excludedTitles = new Set([
+    'portfolio', 'portfolios',
+    'commissions', 'commission', 'commissioned', 'commissioned works',
+    'comissions', 'comission', 'comissioned',
+    'frontpage', 'all', 'home', 'homepage',
+  ]);
   const all = await fetchAllCollections();
-  return all.filter(c =>
-    /^series\b/i.test(String(c.title || '')) ||
-    /^series[-_ ]/i.test(String(c.handle || ''))
-  );
+  return all.filter(c => {
+    const handle = String(c.handle || '').toLowerCase();
+    const title = String(c.title || '').toLowerCase();
+    if (excludedHandles.has(handle)) return false;
+    if (excludedTitles.has(title)) return false;
+    return true;
+  });
 }
 
 async function fetchCommissionProductIds() {
