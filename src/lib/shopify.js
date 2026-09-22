@@ -1,4 +1,4 @@
-// Shopify public storefront integration — uses the public products.json endpoint.
+// Shopify public storefront integration — uses public JSON endpoints.
 // No auth token needed; store just needs "Online Store" sales channel enabled.
 
 const STORE_DOMAIN = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || '';
@@ -19,7 +19,6 @@ function titleCase(text) {
     .join(' ');
 }
 
-// Extract "series name" from a tag like "series:earth tones" — returns null if no series tag
 function extractSeriesName(tags) {
   if (!Array.isArray(tags)) return null;
   const tag = tags.find(t => typeof t === 'string' && t.toLowerCase().startsWith('series:'));
@@ -27,7 +26,6 @@ function extractSeriesName(tags) {
   return tag.split(':').slice(1).join(':').trim();
 }
 
-// Convert a Shopify product to the artwork shape our components expect
 export function shopifyToArtwork(product) {
   if (!product) return null;
   const firstVariant = product.variants?.[0] || {};
@@ -49,7 +47,9 @@ export function shopifyToArtwork(product) {
   const seriesSlug = seriesName ? slugify(seriesName) : null;
 
   let section = 'portfolio';
-  if (normalizedTags.includes('commissions')) section = 'commissions';
+  if (normalizedTags.includes('commissions') || String(product.product_type || '').toLowerCase() === 'commissions') {
+    section = 'commissions';
+  }
 
   return {
     id: product.handle,
@@ -64,7 +64,6 @@ export function shopifyToArtwork(product) {
     image_url: firstImage.src || '',
     available: firstVariant.available !== false,
     section,
-    // Small 2-3 digit project number derived from Shopify id (last digits)
     display_order: parseInt(String(product.id).slice(-3), 10) || 1,
     tags,
     series_name: seriesName,
@@ -99,14 +98,52 @@ async function fetchProductByHandle(handle) {
   } catch { return null; }
 }
 
+// Fetch products belonging to a specific Shopify collection (by handle)
+async function fetchCollectionProducts(handle) {
+  if (!STORE_DOMAIN || !handle) return [];
+  try {
+    const url = `https://${STORE_DOMAIN}/collections/${encodeURIComponent(handle)}/products.json?limit=250`;
+    const res = await fetch(url, { next: { revalidate: 60 } });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return Array.isArray(json.products) ? json.products : [];
+  } catch { return []; }
+}
+
+// Try common commission collection handles Shopify might have generated
+async function getCommissionProductIds() {
+  const handles = ['commissions', 'commission', 'commissioned', 'commissioned-works'];
+  const idSet = new Set();
+  for (const h of handles) {
+    const list = await fetchCollectionProducts(h);
+    list.forEach(p => idSet.add(p.id));
+    if (list.length > 0) break; // stop once one collection has products
+  }
+  return idSet;
+}
+
+async function getSeriesProductIds() {
+  const list = await fetchCollectionProducts('series');
+  return new Set(list.map(p => p.id));
+}
+
 // Portfolio page: regular artworks + one card per series
 export async function getPortfolioAndSeries() {
-  const products = await fetchAllProducts();
-  const all = products.map(shopifyToArtwork).filter(a => a && a.section === 'portfolio');
+  const [allProducts, commissionIds] = await Promise.all([
+    fetchAllProducts(),
+    getCommissionProductIds(),
+  ]);
 
+  // Everything NOT in commissions collection AND NOT tagged as commissions
+  const portfolioProducts = allProducts.filter(p => {
+    if (commissionIds.has(p.id)) return false;
+    const artwork = shopifyToArtwork(p);
+    return artwork && artwork.section !== 'commissions';
+  });
+
+  const all = portfolioProducts.map(shopifyToArtwork).filter(Boolean);
   const individuals = all.filter(a => !a.series_slug);
 
-  // Group series products
   const seriesMap = new Map();
   for (const a of all) {
     if (!a.series_slug) continue;
@@ -127,8 +164,22 @@ export async function getPortfolioAndSeries() {
 }
 
 export async function getCommissionArtworks() {
-  const products = await fetchAllProducts();
-  return products.map(shopifyToArtwork).filter(a => a && a.section === 'commissions');
+  const [allProducts, commissionIds] = await Promise.all([
+    fetchAllProducts(),
+    getCommissionProductIds(),
+  ]);
+  const commissionProducts = allProducts.filter(p => {
+    if (commissionIds.has(p.id)) return true;
+    const artwork = shopifyToArtwork(p);
+    return artwork && artwork.section === 'commissions';
+  });
+  return commissionProducts
+    .map(p => {
+      const a = shopifyToArtwork(p);
+      if (a) a.section = 'commissions';
+      return a;
+    })
+    .filter(Boolean);
 }
 
 export async function getNewestArtworks(limit = 4) {
@@ -141,7 +192,6 @@ export async function getArtworkByHandle(handle) {
   return shopifyToArtwork(product);
 }
 
-// Get all artworks in a series (by slug)
 export async function getSeriesBySlug(slug) {
   const products = await fetchAllProducts();
   const artworks = products
@@ -156,7 +206,6 @@ export async function getSeriesBySlug(slug) {
   };
 }
 
-// Cart permalink — adds variant to cart and takes user to Shopify checkout
 export function getCheckoutUrl(variantId, quantity = 1) {
   if (!STORE_DOMAIN || !variantId) return '#';
   return `https://${STORE_DOMAIN}/cart/${variantId}:${quantity}`;
