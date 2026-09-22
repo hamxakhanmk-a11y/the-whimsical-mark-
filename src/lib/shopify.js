@@ -64,7 +64,8 @@ export function shopifyToArtwork(product) {
     image_url: firstImage.src || '',
     available: firstVariant.available !== false,
     section,
-    display_order: product.id,
+    // Small 2-3 digit project number derived from Shopify id (last digits)
+    display_order: parseInt(String(product.id).slice(-3), 10) || 1,
     tags,
     series_name: seriesName,
     series_slug: seriesSlug,

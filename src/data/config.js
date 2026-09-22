@@ -1,10 +1,9 @@
 export const siteConfig = {
-  artistName: "Hamza Khan",
+  artistName: "The Whimsical Mark",
   tagline: "Original artworks — painted with intention, made to be lived with.",
-  bio: `I'm a self-taught artist based in Pakistan, creating original works in oil, acrylic, and watercolor. Each piece is a conversation between color, texture, and emotion. My work is available for purchase — I ship nationwide.`,
-  // Replace with your WhatsApp number (no + sign, no spaces — e.g. 923001234567)
-  whatsapp: "923001234567",
-  email: "hamxakhan.mk@gmail.com",
-  // Your Instagram username without the @
-  instagram: "yourusername",
+  bio: `Add your bio in Admin → About.`,
+  // Fallbacks — real values live in Supabase site_text (editable via Admin → Contact)
+  whatsapp: "923000000000",
+  email: "you@example.com",
+  instagram: "yourhandle",
 };
