@@ -13,12 +13,18 @@ export default async function SeriesPage(props) {
   return (
     <>
       <main className="bg-white min-h-screen">
-        <div className="mx-auto max-w-2xl px-4 pb-10 pt-28 text-center sm:px-6 sm:pb-16 sm:pt-36">
-          <nav className="mb-6 flex items-center justify-center gap-2 text-[10px] tracking-[0.25em] uppercase text-neutral-400">
-            <Link href="/portfolio" className="transition hover:text-neutral-700">Portfolio</Link>
-            <span>/</span>
-            <span className="text-neutral-600">{series.name}</span>
-          </nav>
+
+        {/* Back button — fixed under navbar */}
+        <div className="mx-auto max-w-6xl px-4 pt-24 sm:px-6 sm:pt-28">
+          <Link
+            href="/portfolio"
+            className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-[#2d7d6b] transition hover:text-[#1f4d43]"
+          >
+            <span aria-hidden="true">←</span> Back to Portfolio
+          </Link>
+        </div>
+
+        <div className="mx-auto max-w-2xl px-4 pb-10 pt-8 text-center sm:px-6 sm:pb-16">
           <p className="text-xs tracking-[0.35em] uppercase mb-3" style={{ color: 'var(--color-coral)' }}>Series</p>
           <h1 className="text-4xl font-light text-neutral-900 sm:text-5xl md:text-6xl" style={{ fontFamily: 'var(--font-cormorant)' }}>
             {series.name}
@@ -29,6 +35,16 @@ export default async function SeriesPage(props) {
 
         <div className="mx-auto max-w-6xl px-4 pb-20 sm:px-6 sm:pb-28">
           <ArtworkGrid artworks={series.artworks} emptyMessage="No works yet" />
+        </div>
+
+        {/* Bottom back link */}
+        <div className="mx-auto max-w-6xl px-4 pb-20 text-center sm:px-6">
+          <Link
+            href="/portfolio"
+            className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-[#2d7d6b] transition hover:text-[#1f4d43] border-b border-current pb-1"
+          >
+            <span aria-hidden="true">←</span> Back to Portfolio
+          </Link>
         </div>
       </main>
     </>

@@ -81,7 +81,7 @@ async function fetchAllProducts() {
   if (!STORE_DOMAIN) return [];
   try {
     const url = `https://${STORE_DOMAIN}/products.json?limit=250`;
-    const res = await fetch(url, { next: { revalidate: 60 } });
+    const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) return [];
     const json = await res.json();
     return Array.isArray(json.products) ? json.products : [];
@@ -92,7 +92,7 @@ async function fetchProductByHandle(handle) {
   if (!STORE_DOMAIN || !handle) return null;
   try {
     const url = `https://${STORE_DOMAIN}/products/${encodeURIComponent(handle)}.json`;
-    const res = await fetch(url, { next: { revalidate: 60 } });
+    const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) return null;
     const json = await res.json();
     return json.product || null;
@@ -103,7 +103,7 @@ async function fetchAllCollections() {
   if (!STORE_DOMAIN) return [];
   try {
     const url = `https://${STORE_DOMAIN}/collections.json?limit=250`;
-    const res = await fetch(url, { next: { revalidate: 60 } });
+    const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) return [];
     const json = await res.json();
     return Array.isArray(json.collections) ? json.collections : [];
@@ -114,7 +114,7 @@ async function fetchCollectionProducts(handle) {
   if (!STORE_DOMAIN || !handle) return [];
   try {
     const url = `https://${STORE_DOMAIN}/collections/${encodeURIComponent(handle)}/products.json?limit=250`;
-    const res = await fetch(url, { next: { revalidate: 60 } });
+    const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) return [];
     const json = await res.json();
     return Array.isArray(json.products) ? json.products : [];

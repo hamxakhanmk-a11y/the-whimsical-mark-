@@ -34,7 +34,10 @@ export default function ArtworkGrid({ artworks, emptyMessage = 'Coming soon' }) 
           </div>
 
           <div className="mt-5 min-h-6 px-1 text-center">
-            <h2 className="line-clamp-1 text-sm font-light leading-snug text-neutral-700">{artwork.title}</h2>
+            <h2 className="line-clamp-2 text-sm font-light leading-snug text-neutral-800" style={{ fontFamily: 'var(--font-cormorant)', fontSize: '1.05rem' }}>{artwork.title}</h2>
+            {artwork.price && (
+              <p className="mt-1 text-[11px] text-neutral-400 tracking-wider">{artwork.price}</p>
+            )}
           </div>
         </Link>
       ))}

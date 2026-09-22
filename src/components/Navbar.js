@@ -92,7 +92,8 @@ export default function Navbar() {
   const changePage = (event, href) => {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
-    if (href === currentHref && !pendingHref) return;
+    // Only block if we're already on the exact same URL (not just a sub-path)
+    if (href === pathname && !pendingHref) return;
 
     window.clearTimeout(flowTimer.current);
     setPendingHref(href);
