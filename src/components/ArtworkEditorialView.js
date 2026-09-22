@@ -20,14 +20,14 @@ export default function ArtworkEditorialView({ artwork, images, whatsappNumber, 
         <header className="grid gap-8 border-b border-neutral-200 px-5 py-8 sm:px-10 sm:py-12 md:grid-cols-[150px_1fr_260px] md:items-end lg:px-16">
           <div>
             <p className="text-[10px] uppercase tracking-[0.25em] text-neutral-400">Project</p>
-            <span className="mt-2 block text-7xl font-light leading-none text-[#075f8f]/35 sm:text-8xl" style={{ fontFamily: 'var(--font-cormorant)' }}>
+            <span className="mt-2 block text-7xl font-light leading-none text-[#2d7d6b]/35 sm:text-8xl" style={{ fontFamily: 'var(--font-cormorant)' }}>
               .{projectNumber}
             </span>
           </div>
 
           <div>
-            <p className="mb-3 text-[10px] uppercase tracking-[0.3em] text-[#ed7189]">Original Artwork</p>
-            <h1 className="max-w-3xl text-4xl font-light leading-[.95] text-[#063a5b] sm:text-6xl lg:text-7xl" style={{ fontFamily: 'var(--font-cormorant)' }}>
+            <p className="mb-3 text-[10px] uppercase tracking-[0.3em] text-[#c19875]">Original Artwork</p>
+            <h1 className="max-w-3xl text-4xl font-light leading-[.95] text-[#1f4d43] sm:text-6xl lg:text-7xl" style={{ fontFamily: 'var(--font-cormorant)' }}>
               {artwork.title}
             </h1>
           </div>
@@ -43,7 +43,7 @@ export default function ArtworkEditorialView({ artwork, images, whatsappNumber, 
 
         <div className="px-5 py-8 sm:px-10 sm:py-12 lg:px-16 lg:py-16">
           <div className="mb-8 flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-neutral-400">
-            <Link href={backHref} className="transition hover:text-[#075f8f]">← {backLabel}</Link>
+            <Link href={backHref} className="transition hover:text-[#2d7d6b]">← {backLabel}</Link>
             <span>Featured View</span>
           </div>
 
@@ -64,8 +64,8 @@ export default function ArtworkEditorialView({ artwork, images, whatsappNumber, 
 
           <div className="mx-auto grid max-w-5xl gap-8 py-14 md:grid-cols-[.7fr_1.3fr] md:py-20">
             <div className="flex items-start gap-4">
-              <span className="mt-2 h-px w-12 bg-[#ed7189]" />
-              <p className="text-[10px] uppercase tracking-[0.28em] text-[#075f8f]">About the Work</p>
+              <span className="mt-2 h-px w-12 bg-[#c19875]" />
+              <p className="text-[10px] uppercase tracking-[0.28em] text-[#2d7d6b]">About the Work</p>
             </div>
             <div>
               {artwork.description ? (
@@ -83,11 +83,11 @@ export default function ArtworkEditorialView({ artwork, images, whatsappNumber, 
                 return (
                   <figure key={image.id || index} className={`group w-full md:w-[76%] ${alignRight ? 'md:self-end' : 'md:self-start'}`}>
                     <div className={`mb-4 flex items-end gap-4 ${alignRight ? 'justify-end text-right' : ''}`}>
-                      <span className="text-5xl font-light leading-none text-[#075f8f]/25" style={{ fontFamily: 'var(--font-cormorant)' }}>
+                      <span className="text-5xl font-light leading-none text-[#2d7d6b]/25" style={{ fontFamily: 'var(--font-cormorant)' }}>
                         {String(index + 2).padStart(2, '0')}
                       </span>
                       <div>
-                        <p className="text-[9px] uppercase tracking-[0.24em] text-[#ed7189]">Detail View</p>
+                        <p className="text-[9px] uppercase tracking-[0.24em] text-[#c19875]">Detail View</p>
                         {image.caption && <figcaption className="mt-1 text-xs italic text-neutral-500">{image.caption}</figcaption>}
                       </div>
                     </div>
@@ -111,19 +111,19 @@ export default function ArtworkEditorialView({ artwork, images, whatsappNumber, 
 
           <footer className="mt-16 grid gap-7 border-t border-neutral-200 pt-10 sm:mt-24 md:grid-cols-[1fr_auto] md:items-center">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.28em] text-[#ed7189]">Collect this work</p>
-              <p className="mt-2 text-2xl text-[#063a5b] sm:text-3xl" style={{ fontFamily: 'var(--font-cormorant)' }}>
+              <p className="text-[10px] uppercase tracking-[0.28em] text-[#c19875]">Collect this work</p>
+              <p className="mt-2 text-2xl text-[#1f4d43] sm:text-3xl" style={{ fontFamily: 'var(--font-cormorant)' }}>
                 {artwork.available ? 'Interested in making this piece yours?' : 'This piece has found its home.'}
               </p>
             </div>
             {artwork.available && (
               <div className="flex flex-col gap-3 sm:flex-row">
                 {checkoutUrl && checkoutUrl !== '#' && (
-                  <a href={checkoutUrl} className="inline-flex justify-center bg-[#075f8f] px-7 py-4 text-[10px] uppercase tracking-[0.2em] text-white transition hover:bg-[#ed7189]">
+                  <a href={checkoutUrl} className="inline-flex justify-center bg-[#2d7d6b] px-7 py-4 text-[10px] uppercase tracking-[0.2em] text-white transition hover:bg-[#c19875]">
                     Buy Now
                   </a>
                 )}
-                <a href={`https://wa.me/${whatsappNumber}?text=${whatsappMsg}`} target="_blank" rel="noopener noreferrer" className="inline-flex justify-center border border-[#075f8f] px-7 py-4 text-[10px] uppercase tracking-[0.2em] text-[#075f8f] transition hover:bg-[#075f8f] hover:text-white">
+                <a href={`https://wa.me/${whatsappNumber}?text=${whatsappMsg}`} target="_blank" rel="noopener noreferrer" className="inline-flex justify-center border border-[#2d7d6b] px-7 py-4 text-[10px] uppercase tracking-[0.2em] text-[#2d7d6b] transition hover:bg-[#2d7d6b] hover:text-white">
                   Ask on WhatsApp
                 </a>
               </div>

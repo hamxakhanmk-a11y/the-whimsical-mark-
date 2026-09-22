@@ -47,7 +47,7 @@ export default function HeroTextEditor({ image, values, defaults, onChange, onSa
     <section className="border border-neutral-200 bg-white p-4 sm:p-8">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.22em] text-[#075f8f]">Scroll Story</p>
+          <p className="text-[10px] uppercase tracking-[0.22em] text-[#2d7d6b]">Scroll Story</p>
           <h3 className="mt-1 text-2xl font-light" style={{ fontFamily: 'var(--font-cormorant)' }}>
             Hero Stage Text
           </h3>
@@ -72,7 +72,7 @@ export default function HeroTextEditor({ image, values, defaults, onChange, onSa
             type="button"
             onClick={() => setStage(item.number)}
             className={`flex-1 rounded-full px-4 py-2 text-[10px] uppercase tracking-[0.16em] transition-colors sm:flex-none ${
-              stage === item.number ? 'bg-[#075f8f] text-white shadow-sm' : 'text-[#075f8f]'
+              stage === item.number ? 'bg-[#2d7d6b] text-white shadow-sm' : 'text-[#2d7d6b]'
             }`}
           >
             Stage {item.number}
@@ -83,7 +83,7 @@ export default function HeroTextEditor({ image, values, defaults, onChange, onSa
       <div className="mt-4 grid gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(220px,.55fr)]">
         <div
           ref={previewRef}
-          className="relative aspect-video touch-none select-none overflow-hidden bg-[#063a5b] shadow-inner"
+          className="relative aspect-video touch-none select-none overflow-hidden bg-[#1f4d43] shadow-inner"
           onPointerDown={event => {
             event.currentTarget.setPointerCapture(event.pointerId);
             setDragging(true);
@@ -112,7 +112,7 @@ export default function HeroTextEditor({ image, values, defaults, onChange, onSa
             className="pointer-events-none absolute w-[min(82%,520px)] -translate-x-1/2 -translate-y-1/2 text-center text-white drop-shadow-lg"
             style={{ left: `${x}%`, top: `${y}%` }}
           >
-            <p className="mb-2 text-[9px] uppercase tracking-[.28em] text-[#ffd1da]">{eyebrow}</p>
+            <p className="mb-2 text-[9px] uppercase tracking-[.28em] text-[#e8d5b8]">{eyebrow}</p>
             <p className="font-serif text-[clamp(1.4rem,4vw,3rem)] leading-[.92]">{title}</p>
           </div>
           <div
@@ -158,7 +158,7 @@ export default function HeroTextEditor({ image, values, defaults, onChange, onSa
                   type="text"
                   value={values[eyebrowKey] ?? defaults[eyebrowKey]}
                   onChange={event => onChange({ [eyebrowKey]: event.target.value })}
-                  className="border border-neutral-300 bg-white px-3 py-2.5 text-sm focus:border-[#075f8f] focus:outline-none"
+                  className="border border-neutral-300 bg-white px-3 py-2.5 text-sm focus:border-[#2d7d6b] focus:outline-none"
                 />
               </label>
               <label className="mt-4 flex flex-col gap-2">
@@ -167,7 +167,7 @@ export default function HeroTextEditor({ image, values, defaults, onChange, onSa
                   rows={2}
                   value={values[titleKey] ?? defaults[titleKey]}
                   onChange={event => onChange({ [titleKey]: event.target.value })}
-                  className="resize-y border border-neutral-300 bg-white px-3 py-2.5 text-sm leading-relaxed focus:border-[#075f8f] focus:outline-none"
+                  className="resize-y border border-neutral-300 bg-white px-3 py-2.5 text-sm leading-relaxed focus:border-[#2d7d6b] focus:outline-none"
                 />
               </label>
             </div>

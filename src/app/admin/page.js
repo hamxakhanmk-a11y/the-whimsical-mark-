@@ -1064,12 +1064,12 @@ export default function AdminPage() {
 
                     <div className="grid gap-3 border-t border-neutral-200 pt-4 sm:grid-cols-2">
                       <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" checked={form.show_on_home} className="h-4 w-4 accent-[#075f8f]"
+                        <input type="checkbox" checked={form.show_on_home} className="h-4 w-4 accent-[#2d7d6b]"
                           onChange={e => setForm({ ...form, show_on_home: e.target.checked })} />
                         <span className="text-xs text-neutral-600">Show on Home</span>
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" checked={form.show_on_website} className="h-4 w-4 accent-[#075f8f]"
+                        <input type="checkbox" checked={form.show_on_website} className="h-4 w-4 accent-[#2d7d6b]"
                           onChange={e => setForm({ ...form, show_on_website: e.target.checked })} />
                         <span className="text-xs text-neutral-600">Show on Website</span>
                       </label>
@@ -1118,7 +1118,7 @@ export default function AdminPage() {
                           }}
                           onPointerUp={saveArtworkImageOrder}
                           onPointerCancel={() => setDraggedArtworkImageId(null)}
-                          className={`relative group/img touch-pan-y select-none cursor-grab active:cursor-grabbing transition duration-150 ${String(draggedArtworkImageId) === String(img.id) ? 'z-10 scale-105 opacity-75 ring-2 ring-[#075f8f] shadow-lg' : ''}`}
+                          className={`relative group/img touch-pan-y select-none cursor-grab active:cursor-grabbing transition duration-150 ${String(draggedArtworkImageId) === String(img.id) ? 'z-10 scale-105 opacity-75 ring-2 ring-[#2d7d6b] shadow-lg' : ''}`}
                         >
                           <img src={img.image_url} alt="extra" className="w-24 h-24 object-cover" />
                           <button
@@ -1219,12 +1219,12 @@ export default function AdminPage() {
                             Edit
                           </button>
                           <label className="flex cursor-pointer items-center gap-1.5 text-[10px] text-neutral-600">
-                            <input type="checkbox" checked={art.show_on_home ?? true} className="h-3.5 w-3.5 accent-[#075f8f]"
+                            <input type="checkbox" checked={art.show_on_home ?? true} className="h-3.5 w-3.5 accent-[#2d7d6b]"
                               onChange={() => toggleArtworkVisibility(art.id, 'show_on_home', art.show_on_home ?? true)} />
                             Home
                           </label>
                           <label className="flex cursor-pointer items-center gap-1.5 text-[10px] text-neutral-600">
-                            <input type="checkbox" checked={art.show_on_website ?? true} className="h-3.5 w-3.5 accent-[#075f8f]"
+                            <input type="checkbox" checked={art.show_on_website ?? true} className="h-3.5 w-3.5 accent-[#2d7d6b]"
                               onChange={() => toggleArtworkVisibility(art.id, 'show_on_website', art.show_on_website ?? true)} />
                             Website
                           </label>

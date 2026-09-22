@@ -80,7 +80,7 @@ export default function WaterSurface() {
         context.stroke();
 
         context.lineWidth = 0.75;
-        context.strokeStyle = `rgba(237, 113, 137, ${0.12 * opacity})`;
+        context.strokeStyle = `rgba(193, 152, 117, ${0.12 * opacity})`;
         context.beginPath();
         context.arc(ripple.x, ripple.y, radius * 0.64, 0, Math.PI * 2);
         context.stroke();

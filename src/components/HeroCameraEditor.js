@@ -66,7 +66,7 @@ export default function HeroCameraEditor({ image, values, onChange, onSave, savi
     <section className="border border-neutral-200 bg-white p-4 sm:p-8">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.22em] text-[#075f8f]">Scroll Animation</p>
+          <p className="text-[10px] uppercase tracking-[0.22em] text-[#2d7d6b]">Scroll Animation</p>
           <h3 className="mt-1 text-2xl font-light" style={{ fontFamily: 'var(--font-cormorant)' }}>
             Hero Camera Path
           </h3>
@@ -81,7 +81,7 @@ export default function HeroCameraEditor({ image, values, onChange, onSave, savi
               type="button"
               onClick={() => setStage(item)}
               className={`rounded-full px-4 py-2 text-[10px] uppercase tracking-[0.16em] transition-colors ${
-                stage === item ? 'bg-[#075f8f] text-white shadow-sm' : 'text-[#075f8f]'
+                stage === item ? 'bg-[#2d7d6b] text-white shadow-sm' : 'text-[#2d7d6b]'
               }`}
             >
               Stage {item}
@@ -94,7 +94,7 @@ export default function HeroCameraEditor({ image, values, onChange, onSave, savi
         <div>
           <div
             ref={previewRef}
-            className="relative aspect-video touch-none select-none overflow-hidden bg-[#063a5b] shadow-inner"
+            className="relative aspect-video touch-none select-none overflow-hidden bg-[#1f4d43] shadow-inner"
             onPointerDown={event => {
               event.currentTarget.setPointerCapture(event.pointerId);
               setDragging(true);
@@ -133,7 +133,7 @@ export default function HeroCameraEditor({ image, values, onChange, onSave, savi
               <>
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#022d47]/25 via-transparent to-[#022d47]/20" />
                 <div
-                  className="pointer-events-none absolute h-9 w-9 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#27a8c7]/45 shadow-[0_0_0_6px_rgba(7,95,143,.24),0_4px_18px_rgba(0,0,0,.35)]"
+                  className="pointer-events-none absolute h-9 w-9 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#4ea87c]/45 shadow-[0_0_0_6px_rgba(7,95,143,.24),0_4px_18px_rgba(0,0,0,.35)]"
                   style={{ left: `${x}%`, top: `${y}%` }}
                 >
                   <span className="absolute left-1/2 top-1/2 h-px w-5 -translate-x-1/2 bg-white" />
@@ -159,7 +159,7 @@ export default function HeroCameraEditor({ image, values, onChange, onSave, savi
           <label className="flex flex-col gap-3">
             <span className="flex items-center justify-between text-[10px] uppercase tracking-[0.16em] text-neutral-500">
               Magnification
-              <strong className="text-[#075f8f]">{zoom.toFixed(2)}×</strong>
+              <strong className="text-[#2d7d6b]">{zoom.toFixed(2)}×</strong>
             </span>
             <input
               type="range"
@@ -168,7 +168,7 @@ export default function HeroCameraEditor({ image, values, onChange, onSave, savi
               step="0.01"
               value={zoom}
               onChange={event => onChange({ [`${prefix}_zoom`]: event.target.value })}
-              className="w-full accent-[#075f8f]"
+              className="w-full accent-[#2d7d6b]"
             />
             <span className="flex justify-between text-[9px] uppercase tracking-wider text-neutral-300">
               <span>Subtle</span><span>Close detail</span>

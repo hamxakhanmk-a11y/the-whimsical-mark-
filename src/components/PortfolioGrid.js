@@ -35,7 +35,7 @@ export default function PortfolioGrid({ individuals = [], series = [], emptyMess
                   alt={s.name}
                   eager={index < 3}
                 />
-                <div className="absolute top-3 left-3 bg-[#075f8f] text-white text-[9px] tracking-[0.25em] uppercase px-3 py-1.5">
+                <div className="absolute top-3 left-3 bg-[#2d7d6b] text-white text-[9px] tracking-[0.25em] uppercase px-3 py-1.5">
                   Series · {s.artworks.length} works
                 </div>
               </div>

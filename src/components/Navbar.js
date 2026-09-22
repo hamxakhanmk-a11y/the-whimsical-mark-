@@ -113,7 +113,7 @@ export default function Navbar() {
       className={`navbar-shell fixed top-0 left-0 right-0 z-50 transition-shadow duration-300 ${
         overlayHero
           ? 'navbar-shell--hero text-white'
-          : 'navbar-shell--solid text-[#075f8f]'
+          : 'navbar-shell--solid text-[#2d7d6b]'
       } ${
         scrolled || !overlayHero ? 'shadow-sm' : ''
       }`}
@@ -173,7 +173,7 @@ export default function Navbar() {
       {open && (
         <nav
           ref={mobileNavRef}
-          className={`nav-flow-tabs nav-flow-tabs--mobile flex max-h-[calc(100svh-4rem)] flex-col items-center gap-1 overflow-y-auto border-t border-[#27a8c7]/15 bg-[#fffaf2] py-3 md:hidden ${flowReady ? 'nav-flow-tabs--ready' : ''} ${flowing ? 'is-flowing' : ''}`}
+          className={`nav-flow-tabs nav-flow-tabs--mobile flex max-h-[calc(100svh-4rem)] flex-col items-center gap-1 overflow-y-auto border-t border-[#4ea87c]/15 bg-[#fffaf2] py-3 md:hidden ${flowReady ? 'nav-flow-tabs--ready' : ''} ${flowing ? 'is-flowing' : ''}`}
         >
           <span className="nav-flow-indicator" aria-hidden="true" />
           {links.map(({ label, href }) => (
