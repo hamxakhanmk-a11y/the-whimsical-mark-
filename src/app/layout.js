@@ -15,8 +15,8 @@ const dmSans = DM_Sans({
 });
 
 export const metadata = {
-  title: "Hamza Khan | Artist",
-  description: "Original artworks by Hamza Khan. Browse and purchase paintings, illustrations, and more.",
+  title: "The Whimsical Mark | Artist",
+  description: "Original artworks by The Whimsical Mark. Browse and purchase paintings, illustrations, and more.",
 };
 
 export default function RootLayout({ children }) {
