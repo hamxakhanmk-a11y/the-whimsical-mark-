@@ -1,10 +1,10 @@
 export const dynamic = 'force-dynamic';
 
-import ArtworkGrid from '@/components/ArtworkGrid';
-import { getPortfolioArtworks } from '@/lib/shopify';
+import PortfolioGrid from '@/components/PortfolioGrid';
+import { getPortfolioAndSeries } from '@/lib/shopify';
 
 export default async function PortfolioPage() {
-  const artworks = await getPortfolioArtworks();
+  const { individuals, series } = await getPortfolioAndSeries();
 
   return (
     <>
@@ -18,7 +18,11 @@ export default async function PortfolioPage() {
         </div>
 
         <div className="mx-auto max-w-6xl px-4 pb-20 sm:px-6 sm:pb-28">
-          <ArtworkGrid artworks={artworks} emptyMessage="Portfolio pieces coming soon" />
+          <PortfolioGrid
+            individuals={individuals}
+            series={series}
+            emptyMessage="Portfolio pieces coming soon"
+          />
         </div>
       </main>
     </>
