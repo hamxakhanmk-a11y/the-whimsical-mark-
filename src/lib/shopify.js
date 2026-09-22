@@ -131,12 +131,16 @@ async function fetchSeriesCollections() {
 }
 
 async function fetchCommissionProductIds() {
-  const handles = ['commissions', 'commission', 'commissioned', 'commissioned-works'];
+  const handles = [
+    'commissions', 'commission', 'commissioned', 'commissioned-works',
+    'comissions', 'comission', 'comissioned', // common spelling typos
+  ];
+  const idSet = new Set();
   for (const h of handles) {
     const list = await fetchCollectionProducts(h);
-    if (list.length > 0) return new Set(list.map(p => p.id));
+    list.forEach(p => idSet.add(p.id));
   }
-  return new Set();
+  return idSet;
 }
 
 // Portfolio page: regular artworks + one card per series
