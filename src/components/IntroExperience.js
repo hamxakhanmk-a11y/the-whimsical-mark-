@@ -25,6 +25,11 @@ export default function IntroExperience({ heroImage, cameraStages, heroText }) {
     '--intro-text-x': `${heroText?.[stage]?.x ?? 50}%`,
     '--intro-text-y': `${heroText?.[stage]?.y ?? 50}%`,
   });
+  const heroTitle = heroText?.[1]?.title || siteConfig.artistName;
+  let letterIndex = 0;
+  const heroTitleWords = heroTitle.split(/\s+/).filter(Boolean).map(word => (
+    word.split('').map(letter => ({ letter, delay: letterIndex++ * 70 }))
+  ));
 
   useLayoutEffect(() => {
     const rootElement = rootRef.current;
@@ -281,9 +286,13 @@ export default function IntroExperience({ heroImage, cameraStages, heroText }) {
             <div className="intro-type-scene">
               <div className="intro-positioned-copy" style={textPosition(1)}>
                 <p className="intro-eyebrow">{heroText?.[1]?.eyebrow || 'Original Artworks'}</p>
-                <div className="intro-letter-line" aria-label={heroText?.[1]?.title || siteConfig.artistName}>
-                  {(heroText?.[1]?.title || siteConfig.artistName).split('').map((letter, index) => (
-                    <span key={`${letter}-${index}`} style={{ animationDelay: `${index * 70}ms` }}>{letter === ' ' ? '\u00a0' : letter}</span>
+                <div className="intro-letter-line" aria-label={heroTitle}>
+                  {heroTitleWords.map((letters, wordIndex) => (
+                    <span key={wordIndex} className="intro-letter-word" aria-hidden="true">
+                      {letters.map(({ letter, delay }, index) => (
+                        <span key={index} className="intro-letter" style={{ animationDelay: `${delay}ms` }}>{letter}</span>
+                      ))}
+                    </span>
                   ))}
                 </div>
               </div>
