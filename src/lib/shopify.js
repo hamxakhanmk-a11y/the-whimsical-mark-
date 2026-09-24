@@ -1,6 +1,8 @@
 // Shopify public storefront integration — uses public JSON endpoints.
 // No auth token needed; store just needs "Online Store" sales channel enabled.
 
+import { cartCheckoutUrl } from '@/lib/checkout';
+
 const STORE_DOMAIN = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || '';
 
 function slugify(text) {
@@ -61,6 +63,7 @@ export function shopifyToArtwork(product) {
     medium: findTag('medium'),
     size: findTag('size'),
     price: priceLabel,
+    price_amount: priceNumber,
     image_url: firstImage.src || '',
     available: firstVariant.available !== false,
     section,
@@ -289,6 +292,5 @@ export async function getSeriesBySlug(slug) {
 }
 
 export function getCheckoutUrl(variantId, quantity = 1) {
-  if (!STORE_DOMAIN || !variantId) return '#';
-  return `https://${STORE_DOMAIN}/cart/${variantId}:${quantity}`;
+  return cartCheckoutUrl([{ variantId, quantity }]);
 }

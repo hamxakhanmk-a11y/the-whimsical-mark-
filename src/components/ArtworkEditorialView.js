@@ -1,8 +1,10 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import PurchaseButtons from '@/components/PurchaseButtons';
 import { isRoundArtwork } from '@/data/artworkPresentation';
+import { isPurchasable } from '@/lib/checkout';
 
-export default function ArtworkEditorialView({ artwork, images, whatsappNumber, checkoutUrl }) {
+export default function ArtworkEditorialView({ artwork, images, whatsappNumber }) {
   const cover = images[0];
   const secondary = images.slice(1);
   const projectNumber = String(artwork.display_order || artwork.id || 1).padStart(2, '0');
@@ -117,11 +119,7 @@ export default function ArtworkEditorialView({ artwork, images, whatsappNumber, 
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              {artwork.available && checkoutUrl && checkoutUrl !== '#' && (
-                <a href={checkoutUrl} className="inline-flex justify-center bg-[#2d7d6b] px-7 py-4 text-[10px] uppercase tracking-[0.2em] text-white transition hover:bg-[#c19875]">
-                  Buy Now
-                </a>
-              )}
+              {isPurchasable(artwork) && <PurchaseButtons artwork={artwork} size="large" />}
               {artwork.available && (
                 <a href={`https://wa.me/${whatsappNumber}?text=${whatsappMsg}`} target="_blank" rel="noopener noreferrer" className="inline-flex justify-center border border-[#2d7d6b] px-7 py-4 text-[10px] uppercase tracking-[0.2em] text-[#2d7d6b] transition hover:bg-[#2d7d6b] hover:text-white">
                   Ask on WhatsApp

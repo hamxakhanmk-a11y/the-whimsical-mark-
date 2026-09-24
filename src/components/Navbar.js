@@ -4,9 +4,11 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { siteConfig } from '@/data/config';
+import { useCart } from '@/components/CartProvider';
 
 const links = [
   { label: 'Home', href: '/' },
+  { label: 'Shop', href: '/shop' },
   { label: 'Portfolio', href: '/portfolio' },
   { label: 'Commissions', href: '/commissions' },
   { label: 'Shows', href: '/shows' },
@@ -22,6 +24,7 @@ export default function Navbar() {
   const [flowReady, setFlowReady] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const { count: cartCount, setOpen: setCartOpen } = useCart();
   const desktopNavRef = useRef(null);
   const mobileNavRef = useRef(null);
   const flowTimer = useRef(null);
@@ -120,13 +123,32 @@ export default function Navbar() {
       }`}
     >
       {/* Top row — artist name */}
-      <div data-hero-scroll-bypass className={`relative flex min-h-16 items-center justify-between border-b px-4 py-3 sm:px-6 md:justify-center ${
+      <div data-hero-scroll-bypass className={`relative flex min-h-16 items-center justify-center border-b px-4 py-3 sm:px-6 ${
         overlayHero ? 'border-white/20' : 'border-neutral-100'
       }`}>
+        {/* Cart — left corner */}
+        <button
+          onClick={() => setCartOpen(true)}
+          className={`absolute left-4 flex h-11 w-11 items-center justify-center rounded-full transition sm:left-6 ${
+            overlayHero ? 'bg-[#0f2d24]/35 text-white backdrop-blur-sm' : 'bg-white/80 text-[#2d7d6b] hover:bg-[#2d7d6b]/10'
+          }`}
+          aria-label={`Open cart${cartCount ? `, ${cartCount} item${cartCount === 1 ? '' : 's'}` : ''}`}
+        >
+          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M6 7h12l-1 13H7L6 7z" />
+            <path d="M9 7a3 3 0 0 1 6 0" />
+          </svg>
+          {cartCount > 0 && (
+            <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#c19875] px-1 text-[10px] font-medium text-white">
+              {cartCount}
+            </span>
+          )}
+        </button>
+
         <Link
           href="/"
           prefetch={true}
-          className="max-w-[calc(100%-4rem)] truncate text-lg uppercase tracking-[0.18em] transition-colors duration-300 sm:text-xl sm:tracking-[0.3em] md:text-2xl"
+          className="max-w-[calc(100%-6.5rem)] truncate text-[15px] uppercase tracking-[0.12em] max-[359px]:text-[13px] max-[359px]:tracking-[0.06em] transition-colors duration-300 min-[400px]:text-lg min-[400px]:tracking-[0.16em] sm:text-xl sm:tracking-[0.3em] md:text-2xl"
           style={{ fontFamily: 'var(--font-cormorant)', color: overlayHero ? '#fffaf2' : 'var(--color-ocean)' }}
         >
           {siteConfig.artistName}
@@ -152,7 +174,7 @@ export default function Navbar() {
       {/* Bottom row — nav links (desktop) */}
       <nav
         ref={desktopNavRef}
-        className={`nav-flow-tabs hidden md:flex justify-center gap-4 py-1.5 px-6 ${flowReady ? 'nav-flow-tabs--ready' : ''} ${flowing ? 'is-flowing' : ''}`}
+        className={`nav-flow-tabs hidden md:flex justify-center gap-1 py-1.5 px-4 lg:gap-4 lg:px-6 ${flowReady ? 'nav-flow-tabs--ready' : ''} ${flowing ? 'is-flowing' : ''}`}
       >
         <span className="nav-flow-indicator" aria-hidden="true" />
         {links.map(({ label, href }) => (
@@ -162,7 +184,7 @@ export default function Navbar() {
             prefetch={true}
             onClick={(event) => changePage(event, href)}
             aria-current={currentHref === href ? 'page' : undefined}
-            className={`nav-flow-link px-4 py-2 text-xs tracking-[0.25em] uppercase ${currentHref === href ? 'nav-flow-link--active' : ''}`}
+            className={`nav-flow-link px-3 py-2 text-[11px] tracking-[0.2em] uppercase lg:px-4 lg:text-xs lg:tracking-[0.25em] ${currentHref === href ? 'nav-flow-link--active' : ''}`}
             style={{ color: currentHref === href || overlayHero ? '#fffaf2' : 'var(--color-ocean)' }}
           >
             {label}

@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { getPortfolioAndSeries, getCommissionArtworks } from '@/lib/shopify';
+import { isPurchasable } from '@/lib/checkout';
 
 // The CMS saves the display order as a JSON list of keys in site_text:
 //   layout_portfolio   -> ["series:starry-nights", "artwork:tannins-and-tendrils", ...]
@@ -46,6 +47,23 @@ export async function getPortfolioItems() {
     ...individuals.map(a => ({ key: `artwork:${a.handle}`, kind: 'artwork', payload: a })),
   ];
   return sortByLayout(items, keys);
+}
+
+// Shop: every painting that can be bought, in the Portfolio layout order
+// (a series expands in place into its paintings).
+export async function getShopArtworks() {
+  const items = await getPortfolioItems();
+  const seen = new Set();
+  const artworks = [];
+  for (const item of items) {
+    const list = item.kind === 'series' ? item.payload.artworks : [item.payload];
+    for (const artwork of list) {
+      if (!artwork || seen.has(artwork.handle)) continue;
+      seen.add(artwork.handle);
+      if (isPurchasable(artwork)) artworks.push(artwork);
+    }
+  }
+  return artworks;
 }
 
 export async function getCommissionItems() {

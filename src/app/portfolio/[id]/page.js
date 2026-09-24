@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import ArtworkEditorialView from '@/components/ArtworkEditorialView';
 import { siteConfig } from '@/data/config';
-import { getArtworkByHandle, getCheckoutUrl } from '@/lib/shopify';
+import { getArtworkByHandle } from '@/lib/shopify';
 
 async function getWhatsapp() {
   try {
@@ -31,7 +31,6 @@ export default async function ArtworkDetailPage(props) {
   if (!artwork) notFound();
 
   const whatsappNumber = String(whatsapp || '').replace(/\D/g, '');
-  const checkoutUrl = getCheckoutUrl(artwork.variant_id);
 
   return (
     <>
@@ -39,7 +38,6 @@ export default async function ArtworkDetailPage(props) {
         artwork={artwork}
         images={artwork.images}
         whatsappNumber={whatsappNumber}
-        checkoutUrl={checkoutUrl}
       />
     </>
   );
