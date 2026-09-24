@@ -1,10 +1,10 @@
 export const dynamic = 'force-dynamic';
 
 import PortfolioGrid from '@/components/PortfolioGrid';
-import { getPortfolioAndSeries } from '@/lib/shopify';
+import { getPortfolioItems } from '@/lib/layout';
 
 export default async function PortfolioPage() {
-  const { individuals, series } = await getPortfolioAndSeries();
+  const items = await getPortfolioItems();
 
   return (
     <>
@@ -18,11 +18,7 @@ export default async function PortfolioPage() {
         </div>
 
         <div className="mx-auto max-w-6xl px-4 pb-20 sm:px-6 sm:pb-28">
-          <PortfolioGrid
-            individuals={individuals}
-            series={series}
-            emptyMessage="Portfolio pieces coming soon"
-          />
+          <PortfolioGrid items={items} emptyMessage="Portfolio pieces coming soon" />
         </div>
       </main>
     </>

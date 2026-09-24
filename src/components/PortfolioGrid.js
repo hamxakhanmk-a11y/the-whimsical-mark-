@@ -2,21 +2,14 @@ import Link from 'next/link';
 import BalancedArtworkImage from '@/components/BalancedArtworkImage';
 import { isRoundArtwork } from '@/data/artworkPresentation';
 
-export default function PortfolioGrid({ individuals = [], series = [], emptyMessage = 'Coming soon' }) {
-  const total = individuals.length + series.length;
-  if (total === 0) {
+export default function PortfolioGrid({ items = [], emptyMessage = 'Coming soon' }) {
+  if (items.length === 0) {
     return (
       <p className="text-center text-neutral-300 text-sm tracking-widest uppercase py-24">
         {emptyMessage}
       </p>
     );
   }
-
-  // Interleave series and individuals; show series first
-  const items = [
-    ...series.map(s => ({ kind: 'series', payload: s })),
-    ...individuals.map(a => ({ kind: 'artwork', payload: a })),
-  ];
 
   return (
     <div className="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 sm:gap-y-16 lg:grid-cols-3 lg:gap-x-10">

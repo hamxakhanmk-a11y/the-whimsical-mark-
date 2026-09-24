@@ -2,10 +2,10 @@ export const dynamic = 'force-dynamic';
 
 import ArtworkGrid from '@/components/ArtworkGrid';
 import CommissionInquiry from '@/components/CommissionInquiry';
-import { getCommissionArtworks } from '@/lib/shopify';
+import { getCommissionItems } from '@/lib/layout';
 
 export default async function CommissionsPage() {
-  const artworks = await getCommissionArtworks();
+  const artworks = (await getCommissionItems()).map(item => item.payload);
 
   return (
     <>

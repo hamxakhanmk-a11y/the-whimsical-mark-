@@ -236,7 +236,7 @@ export default function AdminPage() {
   }
 
   async function loadAll(t) {
-    await Promise.all([fetchArtworks(), fetchSiteImages(), fetchSiteText(), fetchAboutImages(), fetchShows()]);
+    await Promise.all([fetchArtworks(), fetchLayout(), fetchSiteImages(), fetchSiteText(), fetchAboutImages(), fetchShows()]);
   }
 
   // ── Shows functions ────────────────────────────────────────
@@ -441,10 +441,20 @@ export default function AdminPage() {
     const data = await res.json();
     const nextArtworks = Array.isArray(data) ? data : [];
     setArtworks(nextArtworks);
-    setLayoutOrders({
-      portfolio: nextArtworks.filter(art => art.section === 'portfolio' || art.section === 'shop'),
-      commissions: nextArtworks.filter(art => art.section === 'commissions'),
-    });
+  }
+
+  // Paintings come from Shopify; the order is stored in the CMS (site_text layout_* keys)
+  async function fetchLayout() {
+    try {
+      const res = await fetch('/api/layout', { cache: 'no-store' });
+      const data = await res.json();
+      setLayoutOrders({
+        portfolio: Array.isArray(data.portfolio) ? data.portfolio : [],
+        commissions: Array.isArray(data.commissions) ? data.commissions : [],
+      });
+    } catch {
+      setLayoutMsg('Could not load paintings from Shopify.');
+    }
   }
 
   function moveLayoutArtwork(section, fromIndex, toIndex) {
@@ -463,8 +473,8 @@ export default function AdminPage() {
     const list = layoutOrders[section];
     moveLayoutArtwork(
       section,
-      list.findIndex(art => art.id === draggedArtworkId),
-      list.findIndex(art => art.id === targetId)
+      list.findIndex(art => art.key === draggedArtworkId),
+      list.findIndex(art => art.key === targetId)
     );
     setDraggedArtworkId(null);
   }
@@ -472,15 +482,15 @@ export default function AdminPage() {
   async function saveLayout() {
     setSavingLayout(true);
     setLayoutMsg('Saving layout…');
-    const items = layoutOrders[layoutSection].map(art => ({ id: art.id }));
-    const response = await fetch('/api/artworks/reorder', {
+    const keys = layoutOrders[layoutSection].map(art => art.key);
+    const response = await fetch('/api/site-text', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ items }),
+      body: JSON.stringify({ key: `layout_${layoutSection}`, value: JSON.stringify(keys) }),
     });
     if (response.ok) {
       setLayoutMsg('✓ Layout saved and published!');
-      await fetchArtworks();
+      await fetchLayout();
     } else {
       const error = await response.json().catch(() => ({}));
       setLayoutMsg(`Error: ${error.error || 'Could not save layout.'}`);
@@ -850,8 +860,8 @@ export default function AdminPage() {
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-5">
               {[
                 ['Artworks', artworks.length, 'artworks'],
-                ['Portfolio', artworks.filter(art => art.section === 'portfolio' || art.section === 'shop').length, 'layout'],
-                ['Commissions', artworks.filter(art => art.section === 'commissions').length, 'layout'],
+                ['Portfolio', layoutOrders.portfolio.length, 'layout'],
+                ['Commissions', layoutOrders.commissions.length, 'layout'],
                 ['Shows', shows.length, 'shows'],
               ].map(([label, count, tab]) => (
                 <button key={label} onClick={() => { setActiveTab(tab); if (label === 'Portfolio') setLayoutSection('portfolio'); if (label === 'Commissions') setLayoutSection('commissions'); }}
@@ -891,6 +901,7 @@ export default function AdminPage() {
               <h2 className="text-4xl font-light" style={{ fontFamily: 'var(--font-cormorant)' }}>Arrange Paintings</h2>
               <p className="mt-3 max-w-2xl text-sm leading-relaxed text-neutral-500">
                 Drag paintings into position. On a phone, use the arrow buttons. The first card appears first on the public page.
+                Paintings come from Shopify — a new product shows up at the end here until you move it and save.
               </p>
             </div>
 
@@ -910,16 +921,21 @@ export default function AdminPage() {
             ) : (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 sm:gap-5">
                 {layoutOrders[layoutSection].map((art, index) => (
-                  <div key={art.id} draggable
-                    onDragStart={() => setDraggedArtworkId(art.id)}
+                  <div key={art.key} draggable
+                    onDragStart={() => setDraggedArtworkId(art.key)}
                     onDragEnd={() => setDraggedArtworkId(null)}
                     onDragOver={event => event.preventDefault()}
-                    onDrop={() => dropLayoutArtwork(layoutSection, art.id)}
-                    className={`group overflow-hidden border bg-white transition-all ${draggedArtworkId === art.id ? 'scale-95 border-neutral-700 opacity-50' : 'border-neutral-200 hover:border-neutral-500'}`}>
+                    onDrop={() => dropLayoutArtwork(layoutSection, art.key)}
+                    className={`group overflow-hidden border bg-white transition-all ${draggedArtworkId === art.key ? 'scale-95 border-neutral-700 opacity-50' : 'border-neutral-200 hover:border-neutral-500'}`}>
                     <div className="relative aspect-square bg-neutral-50 p-3">
-                      <img src={art.image_url} alt={art.title} className="h-full w-full object-contain" />
+                      {art.image_url && <img src={art.image_url} alt={art.title} className="h-full w-full object-contain" />}
                       <span className="absolute left-2 top-2 flex h-7 min-w-7 items-center justify-center bg-neutral-900 px-2 text-xs text-white">{index + 1}</span>
                       <span className="absolute right-2 top-2 hidden bg-white/90 px-2 py-1 text-[9px] uppercase tracking-wider text-neutral-500 sm:block">Drag</span>
+                      {art.kind === 'series' && (
+                        <span className="absolute bottom-2 left-2 bg-[#2d7d6b] px-2 py-1 text-[9px] uppercase tracking-wider text-white">
+                          Series · {art.count} {art.count === 1 ? 'work' : 'works'}
+                        </span>
+                      )}
                     </div>
                     <div className="p-3">
                       <p className="truncate text-center text-xs text-neutral-700">{art.title}</p>
