@@ -24,7 +24,7 @@ export default function Navbar() {
   const [flowReady, setFlowReady] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const { count: cartCount, setOpen: setCartOpen } = useCart();
+  const { count: cartCount, open: cartOpen, setOpen: setCartOpen } = useCart();
   const desktopNavRef = useRef(null);
   const mobileNavRef = useRef(null);
   const flowTimer = useRef(null);
@@ -129,19 +129,19 @@ export default function Navbar() {
         {/* Cart — left corner */}
         <button
           onClick={() => setCartOpen(true)}
-          className={`absolute left-4 flex h-11 w-11 items-center justify-center rounded-full transition sm:left-6 ${
-            overlayHero ? 'bg-[#0f2d24]/35 text-white backdrop-blur-sm' : 'bg-white/80 text-[#2d7d6b] hover:bg-[#2d7d6b]/10'
-          }`}
+          aria-pressed={cartOpen}
+          className={`emboss-toggle ${overlayHero ? 'emboss-toggle--dark' : ''} absolute left-4 sm:left-6`}
           aria-label={`Open cart${cartCount ? `, ${cartCount} item${cartCount === 1 ? '' : 's'}` : ''}`}
         >
-          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M6 7h12l-1 13H7L6 7z" />
-            <path d="M9 7a3 3 0 0 1 6 0" />
+          {/* Boutique tote bag */}
+          <svg className="h-[1.3rem] w-[1.3rem]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M5.2 8.6h13.6l-1.05 10.2a2 2 0 0 1-2 1.8H8.25a2 2 0 0 1-2-1.8L5.2 8.6z" />
+            <path d="M9 11V7.4a3 3 0 0 1 6 0V11" />
+            <circle cx="9" cy="11" r=".55" fill="currentColor" stroke="none" />
+            <circle cx="15" cy="11" r=".55" fill="currentColor" stroke="none" />
           </svg>
           {cartCount > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#c19875] px-1 text-[10px] font-medium text-white">
-              {cartCount}
-            </span>
+            <span key={cartCount} className="emboss-badge">{cartCount}</span>
           )}
         </button>
 
@@ -156,17 +156,16 @@ export default function Navbar() {
 
         {/* Mobile hamburger */}
         <button
-          className={`absolute right-4 flex h-11 w-11 flex-col items-center justify-center gap-[5px] rounded-full sm:right-6 md:hidden ${
-            overlayHero ? 'bg-[#022d47]/35 backdrop-blur-sm' : 'bg-white/80'
-          }`}
+          className={`emboss-toggle ${overlayHero ? 'emboss-toggle--dark' : ''} absolute right-4 flex-col gap-[5px] sm:right-6 md:hidden`}
           onClick={() => setOpen(!open)}
+          aria-expanded={open}
           aria-label="Toggle menu"
         >
-          <span className={`block h-px w-6 transition-all duration-300 ${overlayHero ? 'bg-white' : 'bg-neutral-700'}`}
+          <span className="block h-px w-5 bg-current transition-all duration-300"
             style={{ transform: open ? 'rotate(45deg) translate(4px, 4px)' : 'none' }} />
-          <span className={`block h-px w-6 transition-all duration-300 ${overlayHero ? 'bg-white' : 'bg-neutral-700'}`}
+          <span className="block h-px w-5 bg-current transition-all duration-300"
             style={{ opacity: open ? 0 : 1 }} />
-          <span className={`block h-px w-6 transition-all duration-300 ${overlayHero ? 'bg-white' : 'bg-neutral-700'}`}
+          <span className="block h-px w-5 bg-current transition-all duration-300"
             style={{ transform: open ? 'rotate(-45deg) translate(4px, -4px)' : 'none' }} />
         </button>
       </div>

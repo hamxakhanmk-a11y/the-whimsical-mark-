@@ -466,4 +466,158 @@ body {
   .nav-flow-indicator,
   .nav-flow-indicator::before,
   .nav-flow-link { animation: none !important; transition: none !important; }
+  .glass-btn, .emboss-toggle, .emboss-badge { transition: none !important; animation: none !important; }
+}
+
+/* Components layer so Tailwind utilities (position, display, width) can still override. */
+@layer components {
+  /* Small frosted-glass pill; stretches wider on hover, focus, or tap. */
+  .glass-btn {
+    --glass-bg: rgba(38, 106, 90, .84);
+    --glass-border: rgba(255, 255, 255, .45);
+    --glass-text: #fff;
+    --glass-pad: 1rem;
+    --glass-pad-grow: 1.75rem;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    padding: .62rem var(--glass-pad);
+    border: 1px solid var(--glass-border);
+    border-radius: 999px;
+    background-color: var(--glass-bg);
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, .3), rgba(255, 255, 255, 0) 62%);
+    color: var(--glass-text);
+    font-size: .62rem;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    -webkit-backdrop-filter: blur(10px) saturate(1.4);
+    backdrop-filter: blur(10px) saturate(1.4);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), 0 4px 14px rgba(31, 77, 67, .12);
+    cursor: pointer;
+    transition:
+      padding .5s cubic-bezier(.2, .9, .25, 1.15),
+      letter-spacing .5s cubic-bezier(.2, .9, .25, 1.15),
+      background-color .3s ease,
+      box-shadow .3s ease,
+      color .3s ease;
+  }
+  .glass-btn:hover,
+  .glass-btn:focus-visible,
+  .glass-btn:active {
+    padding-inline: var(--glass-pad-grow);
+    letter-spacing: .22em;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), 0 8px 22px rgba(31, 77, 67, .2);
+  }
+  .glass-btn:focus-visible { outline: 2px solid rgba(78, 168, 124, .6); outline-offset: 2px; }
+
+  .glass-btn--solid:hover { --glass-bg: rgba(31, 77, 67, .9); }
+
+  .glass-btn--outline {
+    --glass-bg: rgba(255, 255, 255, .55);
+    --glass-border: rgba(45, 125, 107, .42);
+    --glass-text: #2d7d6b;
+  }
+  .glass-btn--outline:hover { --glass-bg: rgba(78, 168, 124, .16); }
+
+  .glass-btn--wood {
+    --glass-bg: rgba(193, 152, 117, .32);
+    --glass-border: rgba(160, 118, 82, .45);
+    --glass-text: #6b4a2e;
+  }
+  .glass-btn--wood:hover { --glass-bg: rgba(193, 152, 117, .5); }
+
+  .glass-btn--lg {
+    --glass-pad: 1.5rem;
+    --glass-pad-grow: 2.5rem;
+    padding-block: .85rem;
+    font-size: .66rem;
+  }
+
+  /* Raised round button that presses in when clicked or toggled on. */
+  .emboss-toggle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 999px;
+    color: var(--color-ocean);
+    background: linear-gradient(145deg, #ffffff, #efe8db);
+    box-shadow:
+      4px 4px 10px rgba(31, 77, 67, .16),
+      -4px -4px 10px rgba(255, 255, 255, .95),
+      inset 0 0 0 1px rgba(255, 255, 255, .7);
+    transition: box-shadow .35s ease, background .35s ease, transform .2s ease, color .3s ease;
+  }
+  .emboss-toggle:hover {
+    box-shadow:
+      5px 5px 13px rgba(31, 77, 67, .22),
+      -5px -5px 13px rgba(255, 255, 255, 1),
+      inset 0 0 0 1px rgba(255, 255, 255, .8);
+  }
+  .emboss-toggle:active,
+  .emboss-toggle[aria-pressed="true"],
+  .emboss-toggle[aria-expanded="true"] {
+    background: linear-gradient(145deg, #ece4d6, #ffffff);
+    box-shadow:
+      inset 3px 3px 7px rgba(31, 77, 67, .2),
+      inset -3px -3px 7px rgba(255, 255, 255, .95);
+    transform: scale(.96);
+  }
+
+  /* Over the dark hero image */
+  .emboss-toggle--dark {
+    color: #fff;
+    background: linear-gradient(145deg, rgba(255, 255, 255, .24), rgba(255, 255, 255, .06));
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    box-shadow:
+      3px 4px 10px rgba(0, 0, 0, .28),
+      inset 1px 1px 0 rgba(255, 255, 255, .38),
+      inset -1px -1px 0 rgba(0, 0, 0, .14);
+  }
+  .emboss-toggle--dark:hover {
+    box-shadow:
+      4px 6px 14px rgba(0, 0, 0, .32),
+      inset 1px 1px 0 rgba(255, 255, 255, .45),
+      inset -1px -1px 0 rgba(0, 0, 0, .14);
+  }
+  .emboss-toggle--dark:active,
+  .emboss-toggle--dark[aria-pressed="true"],
+  .emboss-toggle--dark[aria-expanded="true"] {
+    background: linear-gradient(145deg, rgba(0, 0, 0, .18), rgba(255, 255, 255, .08));
+    box-shadow:
+      inset 2px 3px 7px rgba(0, 0, 0, .38),
+      inset -1px -1px 0 rgba(255, 255, 255, .22);
+  }
+
+  .emboss-badge {
+    position: absolute;
+    top: -.2rem;
+    right: -.2rem;
+    display: flex;
+    min-width: 1.2rem;
+    height: 1.2rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0 .3rem;
+    border-radius: 999px;
+    background: linear-gradient(145deg, #d6b18d, #aa7f58);
+    color: #fff;
+    font-size: .62rem;
+    font-weight: 600;
+    line-height: 1;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, .22), inset 0 1px 0 rgba(255, 255, 255, .45);
+    animation: badge-pop .45s cubic-bezier(.2, .9, .25, 1.4);
+  }
+}
+
+@keyframes badge-pop {
+  0% { transform: scale(.4); }
+  100% { transform: scale(1); }
 }

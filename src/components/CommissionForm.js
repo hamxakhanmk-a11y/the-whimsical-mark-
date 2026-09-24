@@ -37,7 +37,7 @@ export default function CommissionForm({ whatsapp }) {
         Tell me about your idea
         <textarea required name="idea" value={form.idea} onChange={update} rows={5} placeholder="Share your vision, preferred size, timeline, colors, and any references." className={`${fieldClass} resize-y`} />
       </label>
-      <button type="submit" className="mt-1 bg-[#c19875] px-6 py-4 text-sm uppercase tracking-[0.18em] text-white transition hover:bg-[#2d7d6b]">
+      <button type="submit" className="glass-btn glass-btn--lg glass-btn--wood mt-1 self-center">
         Send Inquiry on WhatsApp
       </button>
     </form>

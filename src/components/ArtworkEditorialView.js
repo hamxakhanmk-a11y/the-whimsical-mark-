@@ -118,10 +118,10 @@ export default function ArtworkEditorialView({ artwork, images, whatsappNumber }
                 {artwork.available ? 'Interested in making this piece yours?' : 'This piece has found its home.'}
               </p>
             </div>
-            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <div className="flex flex-wrap items-center gap-3">
               {isPurchasable(artwork) && <PurchaseButtons artwork={artwork} size="large" />}
               {artwork.available && (
-                <a href={`https://wa.me/${whatsappNumber}?text=${whatsappMsg}`} target="_blank" rel="noopener noreferrer" className="inline-flex justify-center border border-[#2d7d6b] px-7 py-4 text-[10px] uppercase tracking-[0.2em] text-[#2d7d6b] transition hover:bg-[#2d7d6b] hover:text-white">
+                <a href={`https://wa.me/${whatsappNumber}?text=${whatsappMsg}`} target="_blank" rel="noopener noreferrer" className="glass-btn glass-btn--lg glass-btn--outline">
                   Ask on WhatsApp
                 </a>
               )}
@@ -129,7 +129,7 @@ export default function ArtworkEditorialView({ artwork, images, whatsappNumber }
                 href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Hi! I would like to commission a piece inspired by "${artwork.title}".`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex justify-center bg-[#c19875] px-7 py-4 text-[10px] uppercase tracking-[0.2em] text-white transition hover:bg-[#2d7d6b]"
+                className="glass-btn glass-btn--lg glass-btn--wood"
               >
                 Commission a Piece
               </a>

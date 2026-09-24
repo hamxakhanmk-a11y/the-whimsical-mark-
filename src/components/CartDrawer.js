@@ -82,7 +82,7 @@ export default function CartDrawer() {
               <p className="mb-5 text-[11px] text-neutral-400">Shipping and taxes are calculated at checkout.</p>
               <a
                 href={cartCheckoutUrl(items)}
-                className="block bg-[#2d7d6b] px-6 py-4 text-center text-xs uppercase tracking-[0.22em] text-white transition hover:bg-[#1f4d43]"
+                className="glass-btn glass-btn--lg glass-btn--solid w-full"
               >
                 Checkout
               </a>
