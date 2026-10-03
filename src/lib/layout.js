@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { getPortfolioAndSeries, getCommissionArtworks } from '@/lib/shopify';
+import { getPortfolioAndSeries, getCommissionArtworks, getCollectionsWithArtworks } from '@/lib/shopify';
 import { isPurchasable } from '@/lib/checkout';
 
 // The CMS saves the display order as a JSON list of keys in site_text:
@@ -64,6 +64,14 @@ export async function getShopArtworks() {
     }
   }
   return artworks;
+}
+
+// Shop sub-tabs: each collection reduced to the paintings that can be bought.
+// `all` keeps empty collections so an old link still opens a page instead of a 404.
+export async function getShopCollections() {
+  const collections = await getCollectionsWithArtworks();
+  const all = collections.map(c => ({ ...c, artworks: c.artworks.filter(isPurchasable) }));
+  return { all, tabs: all.filter(c => c.artworks.length > 0) };
 }
 
 export async function getCommissionItems() {

@@ -80,48 +80,64 @@ export function shopifyToArtwork(product) {
   };
 }
 
+// Shopify rate-limits its public JSON (HTTP 429 "local_rate_limited", blocked for 60s), and one
+// page used to fire ~15 requests. Responses are shared for FRESH_MS, concurrent calls share one
+// request, and a failure serves the last good copy instead of an empty store.
+const FRESH_MS = 30_000;
+const FAILURE_BACKOFF_MS = 20_000;
+const responseCache = new Map();
+
+function fetchShopifyJson(path) {
+  if (!STORE_DOMAIN) return Promise.resolve(null);
+  const url = `https://${STORE_DOMAIN}${path}`;
+  const entry = responseCache.get(url) || {};
+  const now = Date.now();
+  if (entry.pending) return entry.pending;
+  if (entry.data && now - entry.at < FRESH_MS) return Promise.resolve(entry.data);
+  if (entry.failedAt && now - entry.failedAt < FAILURE_BACKOFF_MS) return Promise.resolve(entry.data ?? null);
+
+  // Shopify buckets its rate limit by client signature; Node's default one is shared with every
+  // other site on the same host IPs, so identify this site to get its own allowance.
+  const pending = fetch(url, {
+    cache: 'no-store',
+    headers: { 'User-Agent': 'TheWhimsicalMarkWebsite/1.0', Accept: 'application/json' },
+  })
+    .then(res => {
+      if (!res.ok) throw new Error(`Shopify responded ${res.status}`);
+      return res.json();
+    })
+    .then(data => {
+      responseCache.set(url, { data, at: Date.now() });
+      return data;
+    })
+    .catch(() => {
+      responseCache.set(url, { data: entry.data, at: entry.at, failedAt: Date.now() });
+      return entry.data ?? null;
+    });
+  responseCache.set(url, { ...entry, pending });
+  return pending;
+}
+
 async function fetchAllProducts() {
-  if (!STORE_DOMAIN) return [];
-  try {
-    const url = `https://${STORE_DOMAIN}/products.json?limit=250`;
-    const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return Array.isArray(json.products) ? json.products : [];
-  } catch { return []; }
+  const json = await fetchShopifyJson('/products.json?limit=250');
+  return Array.isArray(json?.products) ? json.products : [];
 }
 
 async function fetchProductByHandle(handle) {
-  if (!STORE_DOMAIN || !handle) return null;
-  try {
-    const url = `https://${STORE_DOMAIN}/products/${encodeURIComponent(handle)}.json`;
-    const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) return null;
-    const json = await res.json();
-    return json.product || null;
-  } catch { return null; }
+  if (!handle) return null;
+  const json = await fetchShopifyJson(`/products/${encodeURIComponent(handle)}.json`);
+  return json?.product || null;
 }
 
 async function fetchAllCollections() {
-  if (!STORE_DOMAIN) return [];
-  try {
-    const url = `https://${STORE_DOMAIN}/collections.json?limit=250`;
-    const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return Array.isArray(json.collections) ? json.collections : [];
-  } catch { return []; }
+  const json = await fetchShopifyJson('/collections.json?limit=250');
+  return Array.isArray(json?.collections) ? json.collections : [];
 }
 
 async function fetchCollectionProducts(handle) {
-  if (!STORE_DOMAIN || !handle) return [];
-  try {
-    const url = `https://${STORE_DOMAIN}/collections/${encodeURIComponent(handle)}/products.json?limit=250`;
-    const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return Array.isArray(json.products) ? json.products : [];
-  } catch { return []; }
+  if (!handle) return [];
+  const json = await fetchShopifyJson(`/collections/${encodeURIComponent(handle)}/products.json?limit=250`);
+  return Array.isArray(json?.products) ? json.products : [];
 }
 
 // Every collection that isn't Portfolio/Commissions is treated as a series
@@ -149,17 +165,27 @@ async function fetchSeriesCollections() {
   });
 }
 
+// Every non-Portfolio/Commissions collection with its paintings, in Shopify's collection order
+export async function getCollectionsWithArtworks() {
+  const collections = await fetchSeriesCollections();
+  return Promise.all(collections.map(async col => ({
+    handle: col.handle,
+    title: col.title,
+    artworks: (await fetchCollectionProducts(col.handle)).map(shopifyToArtwork).filter(Boolean),
+  })));
+}
+
+const COMMISSION_HANDLES = new Set([
+  'commissions', 'commission', 'commissioned', 'commissioned-works',
+  'comissions', 'comission', 'comissioned', // common spelling typos
+]);
+
+// Only fetch commission collections that actually exist, instead of probing every spelling.
 async function fetchCommissionProductIds() {
-  const handles = [
-    'commissions', 'commission', 'commissioned', 'commissioned-works',
-    'comissions', 'comission', 'comissioned', // common spelling typos
-  ];
-  const idSet = new Set();
-  for (const h of handles) {
-    const list = await fetchCollectionProducts(h);
-    list.forEach(p => idSet.add(p.id));
-  }
-  return idSet;
+  const collections = await fetchAllCollections();
+  const handles = collections.map(c => c.handle).filter(handle => COMMISSION_HANDLES.has(handle));
+  const lists = await Promise.all(handles.map(fetchCollectionProducts));
+  return new Set(lists.flat().map(p => p.id));
 }
 
 // Portfolio page: regular artworks + one card per series

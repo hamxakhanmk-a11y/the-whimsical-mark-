@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { Fragment, useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { siteConfig } from '@/data/config';
@@ -22,6 +22,8 @@ export default function Navbar() {
   const [pendingHref, setPendingHref] = useState(null);
   const [flowing, setFlowing] = useState(false);
   const [flowReady, setFlowReady] = useState(false);
+  const [shopCollections, setShopCollections] = useState([]);
+  const [shopMenuOpen, setShopMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { count: cartCount, open: cartOpen, setOpen: setCartOpen } = useCart();
@@ -59,16 +61,33 @@ export default function Navbar() {
   }, [pathname]);
 
   useEffect(() => {
+    let cancelled = false;
+    fetch('/api/shop-collections')
+      .then(res => (res.ok ? res.json() : []))
+      .then(data => { if (!cancelled && Array.isArray(data)) setShopCollections(data); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => { setShopMenuOpen(false); }, [pathname]);
+
+  useEffect(() => {
+    // Measured from on-screen centres (not offsetLeft) so links can sit inside wrappers like the
+    // Shop dropdown, and the active link's scale() doesn't skew the width.
     const positionIndicator = (container, mobile = false) => {
       if (!container) return false;
       const active = container.querySelector('.nav-flow-link--active');
       if (!active || active.offsetParent === null) return false;
+      const a = active.getBoundingClientRect();
+      const c = container.getBoundingClientRect();
 
       if (mobile) {
-        container.style.setProperty('--nav-flow-y', `${active.offsetTop}px`);
+        const centerY = a.top + a.height / 2 - c.top + container.scrollTop;
+        container.style.setProperty('--nav-flow-y', `${centerY - active.offsetHeight / 2}px`);
         container.style.setProperty('--nav-flow-h', `${active.offsetHeight}px`);
       } else {
-        container.style.setProperty('--nav-flow-x', `${active.offsetLeft}px`);
+        const centerX = a.left + a.width / 2 - c.left;
+        container.style.setProperty('--nav-flow-x', `${centerX - active.offsetWidth / 2}px`);
         container.style.setProperty('--nav-flow-w', `${active.offsetWidth}px`);
       }
       return true;
@@ -176,19 +195,60 @@ export default function Navbar() {
         className={`nav-flow-tabs hidden md:flex justify-center gap-1 py-1.5 px-4 lg:gap-4 lg:px-6 ${flowReady ? 'nav-flow-tabs--ready' : ''} ${flowing ? 'is-flowing' : ''}`}
       >
         <span className="nav-flow-indicator" aria-hidden="true" />
-        {links.map(({ label, href }) => (
-          <Link
-            key={label}
-            href={href}
-            prefetch={true}
-            onClick={(event) => changePage(event, href)}
-            aria-current={currentHref === href ? 'page' : undefined}
-            className={`nav-flow-link px-3 py-2 text-[11px] tracking-[0.2em] uppercase lg:px-4 lg:text-xs lg:tracking-[0.25em] ${currentHref === href ? 'nav-flow-link--active' : ''}`}
-            style={{ color: currentHref === href || overlayHero ? '#fffaf2' : 'var(--color-ocean)' }}
-          >
-            {label}
-          </Link>
-        ))}
+        {links.map(({ label, href }) => {
+          const link = (
+            <Link
+              key={label}
+              href={href}
+              prefetch={true}
+              onClick={(event) => changePage(event, href)}
+              aria-current={currentHref === href ? 'page' : undefined}
+              aria-haspopup={href === '/shop' && shopCollections.length > 0 ? 'true' : undefined}
+              aria-expanded={href === '/shop' && shopCollections.length > 0 ? shopMenuOpen : undefined}
+              className={`nav-flow-link px-3 py-2 text-[11px] tracking-[0.2em] uppercase lg:px-4 lg:text-xs lg:tracking-[0.25em] ${currentHref === href ? 'nav-flow-link--active' : ''}`}
+              style={{ color: currentHref === href || overlayHero ? '#fffaf2' : 'var(--color-ocean)' }}
+            >
+              {label}
+            </Link>
+          );
+          if (href !== '/shop' || shopCollections.length === 0) return link;
+
+          return (
+            <div
+              key={label}
+              className="relative flex"
+              onMouseEnter={() => setShopMenuOpen(true)}
+              onMouseLeave={() => setShopMenuOpen(false)}
+              onFocus={() => setShopMenuOpen(true)}
+              onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setShopMenuOpen(false); }}
+              onKeyDown={event => { if (event.key === 'Escape') setShopMenuOpen(false); }}
+            >
+              {link}
+              <div
+                className={`absolute left-1/2 top-full z-50 -translate-x-1/2 pt-2 transition duration-200 ${
+                  shopMenuOpen ? 'visible translate-y-0 opacity-100' : 'pointer-events-none invisible -translate-y-1 opacity-0'
+                }`}
+              >
+                <div className="min-w-56 rounded-2xl border border-[#2d7d6b]/15 bg-[#fffaf2]/95 p-2 shadow-[0_18px_40px_rgba(31,77,67,.18)] backdrop-blur-md">
+                  {[{ handle: '', title: 'Shop All', href: '/shop' }, ...shopCollections.map(c => ({ ...c, href: `/shop/${c.handle}` }))].map(item => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setShopMenuOpen(false)}
+                      aria-current={pathname === item.href ? 'page' : undefined}
+                      className={`flex items-center justify-between gap-6 rounded-xl px-4 py-2.5 text-[11px] uppercase tracking-[0.2em] transition-colors hover:bg-[#4ea87c]/12 ${
+                        pathname === item.href ? 'bg-[#4ea87c]/12 text-[#1f4d43]' : 'text-[#2d7d6b]'
+                      }`}
+                    >
+                      <span className="whitespace-nowrap">{item.title}</span>
+                      {item.count ? <span className="text-[10px] tracking-normal text-neutral-400">{item.count}</span> : null}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </nav>
 
       {/* Mobile dropdown */}
@@ -199,17 +259,30 @@ export default function Navbar() {
         >
           <span className="nav-flow-indicator" aria-hidden="true" />
           {links.map(({ label, href }) => (
-            <Link
-              key={label}
-              href={href}
-              prefetch={true}
-              onClick={(event) => changePage(event, href)}
-              aria-current={currentHref === href ? 'page' : undefined}
-              className={`nav-flow-link w-full py-3 text-center text-xs uppercase tracking-[0.25em] ${currentHref === href ? 'nav-flow-link--active' : ''}`}
-              style={{ color: currentHref === href ? '#fffaf2' : 'var(--color-ocean)' }}
-            >
-              {label}
-            </Link>
+            <Fragment key={label}>
+              <Link
+                href={href}
+                prefetch={true}
+                onClick={(event) => changePage(event, href)}
+                aria-current={currentHref === href ? 'page' : undefined}
+                className={`nav-flow-link w-full py-3 text-center text-xs uppercase tracking-[0.25em] ${currentHref === href ? 'nav-flow-link--active' : ''}`}
+                style={{ color: currentHref === href ? '#fffaf2' : 'var(--color-ocean)' }}
+              >
+                {label}
+              </Link>
+              {href === '/shop' && shopCollections.map(collection => (
+                <Link
+                  key={collection.handle}
+                  href={`/shop/${collection.handle}`}
+                  aria-current={pathname === `/shop/${collection.handle}` ? 'page' : undefined}
+                  className={`w-full py-2 text-center text-[10px] uppercase tracking-[0.22em] ${
+                    pathname === `/shop/${collection.handle}` ? 'text-[#1f4d43] underline underline-offset-4' : 'text-[#2d7d6b]/70'
+                  }`}
+                >
+                  {collection.title}
+                </Link>
+              ))}
+            </Fragment>
           ))}
         </nav>
       )}
