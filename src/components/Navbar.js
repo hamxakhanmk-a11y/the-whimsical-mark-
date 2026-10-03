@@ -24,6 +24,8 @@ export default function Navbar() {
   const [flowReady, setFlowReady] = useState(false);
   const [shopCollections, setShopCollections] = useState([]);
   const [shopMenuOpen, setShopMenuOpen] = useState(false);
+  const [mobileShopOpen, setMobileShopOpen] = useState(false);
+  const shopMenuRef = useRef(null);
   const pathname = usePathname();
   const router = useRouter();
   const { count: cartCount, open: cartOpen, setOpen: setCartOpen } = useCart();
@@ -69,7 +71,25 @@ export default function Navbar() {
     return () => { cancelled = true; };
   }, []);
 
-  useEffect(() => { setShopMenuOpen(false); }, [pathname]);
+  useEffect(() => {
+    setShopMenuOpen(false);
+    setMobileShopOpen(false);
+  }, [pathname]);
+
+  // Close the Shop dropdown on a click anywhere outside it, or on Escape.
+  useEffect(() => {
+    if (!shopMenuOpen) return;
+    const onPointerDown = event => {
+      if (!shopMenuRef.current?.contains(event.target)) setShopMenuOpen(false);
+    };
+    const onKeyDown = event => { if (event.key === 'Escape') setShopMenuOpen(false); };
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [shopMenuOpen]);
 
   useEffect(() => {
     // Measured from on-screen centres (not offsetLeft) so links can sit inside wrappers like the
@@ -105,7 +125,7 @@ export default function Navbar() {
       window.cancelAnimationFrame(frame);
       window.removeEventListener('resize', syncIndicators);
     };
-  }, [currentHref, open]);
+  }, [currentHref, open, mobileShopOpen, shopCollections]);
 
   useEffect(() => () => {
     window.clearTimeout(flowTimer.current);
@@ -203,8 +223,6 @@ export default function Navbar() {
               prefetch={true}
               onClick={(event) => changePage(event, href)}
               aria-current={currentHref === href ? 'page' : undefined}
-              aria-haspopup={href === '/shop' && shopCollections.length > 0 ? 'true' : undefined}
-              aria-expanded={href === '/shop' && shopCollections.length > 0 ? shopMenuOpen : undefined}
               className={`nav-flow-link px-3 py-2 text-[11px] tracking-[0.2em] uppercase lg:px-4 lg:text-xs lg:tracking-[0.25em] ${currentHref === href ? 'nav-flow-link--active' : ''}`}
               style={{ color: currentHref === href || overlayHero ? '#fffaf2' : 'var(--color-ocean)' }}
             >
@@ -213,17 +231,22 @@ export default function Navbar() {
           );
           if (href !== '/shop' || shopCollections.length === 0) return link;
 
+          // With collections, Shop opens a dropdown on click instead of navigating.
           return (
-            <div
-              key={label}
-              className="relative flex"
-              onMouseEnter={() => setShopMenuOpen(true)}
-              onMouseLeave={() => setShopMenuOpen(false)}
-              onFocus={() => setShopMenuOpen(true)}
-              onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setShopMenuOpen(false); }}
-              onKeyDown={event => { if (event.key === 'Escape') setShopMenuOpen(false); }}
-            >
-              {link}
+            <div key={label} ref={shopMenuRef} className="relative flex">
+              <button
+                type="button"
+                onClick={() => setShopMenuOpen(value => !value)}
+                aria-haspopup="true"
+                aria-expanded={shopMenuOpen}
+                className={`nav-flow-link flex items-center gap-1.5 px-3 py-2 text-[11px] tracking-[0.2em] uppercase lg:px-4 lg:text-xs lg:tracking-[0.25em] ${currentHref === href ? 'nav-flow-link--active' : ''}`}
+                style={{ color: currentHref === href || overlayHero ? '#fffaf2' : 'var(--color-ocean)' }}
+              >
+                {label}
+                <svg className={`h-2 w-2.5 transition-transform duration-300 ${shopMenuOpen ? 'rotate-180' : ''}`} viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M1 1l4 4 4-4" />
+                </svg>
+              </button>
               <div
                 className={`absolute left-1/2 top-full z-50 -translate-x-1/2 pt-2 transition duration-200 ${
                   shopMenuOpen ? 'visible translate-y-0 opacity-100' : 'pointer-events-none invisible -translate-y-1 opacity-0'
@@ -258,32 +281,56 @@ export default function Navbar() {
           className={`nav-flow-tabs nav-flow-tabs--mobile flex max-h-[calc(100svh-4rem)] flex-col items-center gap-1 overflow-y-auto border-t border-[#4ea87c]/15 bg-[#fffaf2] py-3 md:hidden ${flowReady ? 'nav-flow-tabs--ready' : ''} ${flowing ? 'is-flowing' : ''}`}
         >
           <span className="nav-flow-indicator" aria-hidden="true" />
-          {links.map(({ label, href }) => (
-            <Fragment key={label}>
-              <Link
-                href={href}
-                prefetch={true}
-                onClick={(event) => changePage(event, href)}
-                aria-current={currentHref === href ? 'page' : undefined}
-                className={`nav-flow-link w-full py-3 text-center text-xs uppercase tracking-[0.25em] ${currentHref === href ? 'nav-flow-link--active' : ''}`}
-                style={{ color: currentHref === href ? '#fffaf2' : 'var(--color-ocean)' }}
-              >
-                {label}
-              </Link>
-              {href === '/shop' && shopCollections.map(collection => (
+          {links.map(({ label, href }) => {
+            const linkClass = `nav-flow-link w-full py-3 text-center text-xs uppercase tracking-[0.25em] ${currentHref === href ? 'nav-flow-link--active' : ''}`;
+            const linkStyle = { color: currentHref === href ? '#fffaf2' : 'var(--color-ocean)' };
+
+            if (href !== '/shop' || shopCollections.length === 0) {
+              return (
                 <Link
-                  key={collection.handle}
-                  href={`/shop/${collection.handle}`}
-                  aria-current={pathname === `/shop/${collection.handle}` ? 'page' : undefined}
-                  className={`w-full py-2 text-center text-[10px] uppercase tracking-[0.22em] ${
-                    pathname === `/shop/${collection.handle}` ? 'text-[#1f4d43] underline underline-offset-4' : 'text-[#2d7d6b]/70'
-                  }`}
+                  key={label}
+                  href={href}
+                  prefetch={true}
+                  onClick={(event) => changePage(event, href)}
+                  aria-current={currentHref === href ? 'page' : undefined}
+                  className={linkClass}
+                  style={linkStyle}
                 >
-                  {collection.title}
+                  {label}
                 </Link>
-              ))}
-            </Fragment>
-          ))}
+              );
+            }
+
+            const shopItems = [{ handle: 'all', title: 'Shop All', href: '/shop' }, ...shopCollections.map(c => ({ ...c, href: `/shop/${c.handle}` }))];
+            return (
+              <Fragment key={label}>
+                <button
+                  type="button"
+                  onClick={() => setMobileShopOpen(value => !value)}
+                  aria-expanded={mobileShopOpen}
+                  className={`${linkClass} flex items-center justify-center gap-2`}
+                  style={linkStyle}
+                >
+                  {label}
+                  <svg className={`h-2 w-2.5 transition-transform duration-300 ${mobileShopOpen ? 'rotate-180' : ''}`} viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M1 1l4 4 4-4" />
+                  </svg>
+                </button>
+                {mobileShopOpen && shopItems.map(item => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    aria-current={pathname === item.href ? 'page' : undefined}
+                    className={`w-full py-2 text-center text-[10px] uppercase tracking-[0.22em] ${
+                      pathname === item.href ? 'text-[#1f4d43] underline underline-offset-4' : 'text-[#2d7d6b]/75'
+                    }`}
+                  >
+                    {item.title}
+                  </Link>
+                ))}
+              </Fragment>
+            );
+          })}
         </nav>
       )}
     </header>
