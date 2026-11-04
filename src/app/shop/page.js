@@ -2,14 +2,14 @@ export const dynamic = 'force-dynamic';
 
 import ArtworkGrid from '@/components/ArtworkGrid';
 import ShopTabs from '@/components/ShopTabs';
-import { getShopArtworks, getShopCollections } from '@/lib/layout';
+import { getShopArtworks } from '@/lib/layout';
 
 export const metadata = {
   title: 'Shop | The Whimsical Mark',
 };
 
 export default async function ShopPage() {
-  const [artworks, { tabs }] = await Promise.all([getShopArtworks(), getShopCollections()]);
+  const artworks = await getShopArtworks();
 
   return (
     <main className="bg-white min-h-screen">
@@ -24,7 +24,7 @@ export default async function ShopPage() {
         </p>
       </div>
 
-      <ShopTabs collections={tabs} active="all" />
+      <ShopTabs active="all" />
 
       <div className="mx-auto max-w-6xl px-4 pb-20 sm:px-6 sm:pb-28">
         <ArtworkGrid artworks={artworks} emptyMessage="New works coming soon" />

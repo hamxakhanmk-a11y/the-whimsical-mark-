@@ -5,10 +5,18 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { siteConfig } from '@/data/config';
 import { useCart } from '@/components/CartProvider';
+import { SHOP_CATEGORIES, shopHref } from '@/data/shopCategories';
+
+// The Shop menu starts from the fixed categories; how many pieces each has arrives from the server.
+const STATIC_SHOP_MENU = SHOP_CATEGORIES.map(category => ({
+  slug: category.slug, title: category.title, href: shopHref(category),
+  children: category.children?.map(child => ({ slug: child.slug, title: child.title, href: shopHref(category, child) })),
+}));
 
 const links = [
   { label: 'Home', href: '/' },
   { label: 'Shop', href: '/shop' },
+  { label: 'Paintings', href: '/paintings' },
   { label: 'Portfolio', href: '/portfolio' },
   { label: 'Commissions', href: '/commissions' },
   { label: 'Shows', href: '/shows' },
@@ -22,7 +30,8 @@ export default function Navbar() {
   const [pendingHref, setPendingHref] = useState(null);
   const [flowing, setFlowing] = useState(false);
   const [flowReady, setFlowReady] = useState(false);
-  const [shopCollections, setShopCollections] = useState([]);
+  const [shopMenu, setShopMenu] = useState(STATIC_SHOP_MENU);
+  const [openSubmenu, setOpenSubmenu] = useState(null); // a category whose types are showing (Bookmarks)
   const [shopMenuOpen, setShopMenuOpen] = useState(false);
   const [mobileShopOpen, setMobileShopOpen] = useState(false);
   const shopMenuRef = useRef(null);
@@ -58,6 +67,9 @@ export default function Navbar() {
     const frame = window.requestAnimationFrame(() => {
       setPendingHref(null);
       setOpen(false);
+      setShopMenuOpen(false);
+      setMobileShopOpen(false);
+      setOpenSubmenu(null);
     });
     return () => window.cancelAnimationFrame(frame);
   }, [pathname]);
@@ -66,15 +78,10 @@ export default function Navbar() {
     let cancelled = false;
     fetch('/api/shop-collections')
       .then(res => (res.ok ? res.json() : []))
-      .then(data => { if (!cancelled && Array.isArray(data)) setShopCollections(data); })
+      .then(data => { if (!cancelled && Array.isArray(data) && data.length) setShopMenu(data); })
       .catch(() => {});
     return () => { cancelled = true; };
   }, []);
-
-  useEffect(() => {
-    setShopMenuOpen(false);
-    setMobileShopOpen(false);
-  }, [pathname]);
 
   // Close the Shop dropdown on a click anywhere outside it, or on Escape.
   useEffect(() => {
@@ -125,7 +132,7 @@ export default function Navbar() {
       window.cancelAnimationFrame(frame);
       window.removeEventListener('resize', syncIndicators);
     };
-  }, [currentHref, open, mobileShopOpen, shopCollections]);
+  }, [currentHref, open, mobileShopOpen, shopMenu]);
 
   useEffect(() => () => {
     window.clearTimeout(flowTimer.current);
@@ -148,6 +155,16 @@ export default function Navbar() {
 
     router.push(href);
   };
+
+  // how many pieces a category has for sale, or "soon" while it has none
+  const countLabel = item => (item.count === undefined ? null : item.count > 0
+    ? <span className="text-[10px] tracking-normal text-neutral-400">{item.count}</span>
+    : <span className="text-[9px] tracking-[0.15em] text-[#4ea87c]/80">soon</span>);
+  const chevron = turned => (
+    <svg className={`h-2 w-2.5 shrink-0 transition-transform duration-300 ${turned ? 'rotate-180' : ''}`} viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M1 1l4 4 4-4" />
+    </svg>
+  );
 
   if (pathname.startsWith('/admin')) return null;
 
@@ -229,9 +246,9 @@ export default function Navbar() {
               {label}
             </Link>
           );
-          if (href !== '/shop' || shopCollections.length === 0) return link;
+          if (href !== '/shop') return link;
 
-          // With collections, Shop opens a dropdown on click instead of navigating.
+          // Shop opens its category menu on click instead of navigating.
           return (
             <div key={label} ref={shopMenuRef} className="relative flex">
               <button
@@ -252,21 +269,46 @@ export default function Navbar() {
                   shopMenuOpen ? 'visible translate-y-0 opacity-100' : 'pointer-events-none invisible -translate-y-1 opacity-0'
                 }`}
               >
-                <div className="min-w-56 rounded-2xl border border-[#2d7d6b]/15 bg-[#fffaf2]/95 p-2 shadow-[0_18px_40px_rgba(31,77,67,.18)] backdrop-blur-md">
-                  {[{ handle: '', title: 'Shop All', href: '/shop' }, ...shopCollections.map(c => ({ ...c, href: `/shop/${c.handle}` }))].map(item => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setShopMenuOpen(false)}
-                      aria-current={pathname === item.href ? 'page' : undefined}
-                      className={`flex items-center justify-between gap-6 rounded-xl px-4 py-2.5 text-[11px] uppercase tracking-[0.2em] transition-colors hover:bg-[#4ea87c]/12 ${
-                        pathname === item.href ? 'bg-[#4ea87c]/12 text-[#1f4d43]' : 'text-[#2d7d6b]'
-                      }`}
-                    >
-                      <span className="whitespace-nowrap">{item.title}</span>
-                      {item.count ? <span className="text-[10px] tracking-normal text-neutral-400">{item.count}</span> : null}
-                    </Link>
-                  ))}
+                <div className="min-w-60 rounded-2xl border border-[#2d7d6b]/15 bg-[#fffaf2]/95 p-2 shadow-[0_18px_40px_rgba(31,77,67,.18)] backdrop-blur-md">
+                  {[{ slug: 'all', title: 'Shop All', href: '/shop' }, ...shopMenu].map(item => {
+                    const rowClass = active => `flex w-full items-center justify-between gap-6 rounded-xl px-4 py-2.5 text-[11px] uppercase tracking-[0.2em] transition-colors hover:bg-[#4ea87c]/12 ${
+                      active ? 'bg-[#4ea87c]/12 text-[#1f4d43]' : 'text-[#2d7d6b]'
+                    }`;
+                    if (!item.children) {
+                      return (
+                        <Link key={item.href} href={item.href} onClick={() => setShopMenuOpen(false)}
+                          aria-current={pathname === item.href ? 'page' : undefined} className={rowClass(pathname === item.href)}>
+                          <span className="whitespace-nowrap">{item.title}</span>
+                          {countLabel(item)}
+                        </Link>
+                      );
+                    }
+                    // a category with types (Bookmarks): opens in place to show them
+                    const expanded = openSubmenu === item.slug;
+                    return (
+                      <div key={item.href}>
+                        <button type="button" onClick={() => setOpenSubmenu(expanded ? null : item.slug)} aria-expanded={expanded}
+                          className={rowClass(pathname.startsWith(item.href))}>
+                          <span className="whitespace-nowrap">{item.title}</span>
+                          <span className="flex items-center gap-2">{countLabel(item)}{chevron(expanded)}</span>
+                        </button>
+                        {expanded && (
+                          <div className="mb-1 ml-3 border-l border-[#4ea87c]/25 pl-2">
+                            {[{ slug: 'all', title: `All ${item.title}`, href: item.href, count: item.count }, ...item.children].map(child => (
+                              <Link key={child.href} href={child.href} onClick={() => setShopMenuOpen(false)}
+                                aria-current={pathname === child.href ? 'page' : undefined}
+                                className={`flex items-center justify-between gap-6 rounded-xl px-3 py-2 text-[10px] uppercase tracking-[0.18em] transition-colors hover:bg-[#4ea87c]/12 ${
+                                  pathname === child.href ? 'bg-[#4ea87c]/12 text-[#1f4d43]' : 'text-[#2d7d6b]/85'
+                                }`}>
+                                <span className="whitespace-nowrap">{child.title}</span>
+                                {countLabel(child)}
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -285,7 +327,7 @@ export default function Navbar() {
             const linkClass = `nav-flow-link w-full py-3 text-center text-xs uppercase tracking-[0.25em] ${currentHref === href ? 'nav-flow-link--active' : ''}`;
             const linkStyle = { color: currentHref === href ? '#fffaf2' : 'var(--color-ocean)' };
 
-            if (href !== '/shop' || shopCollections.length === 0) {
+            if (href !== '/shop') {
               return (
                 <Link
                   key={label}
@@ -301,7 +343,10 @@ export default function Navbar() {
               );
             }
 
-            const shopItems = [{ handle: 'all', title: 'Shop All', href: '/shop' }, ...shopCollections.map(c => ({ ...c, href: `/shop/${c.handle}` }))];
+            const shopItems = [{ slug: 'all', title: 'Shop All', href: '/shop' }, ...shopMenu];
+            const mobileItemClass = (active, small = false) => `flex w-full items-center justify-center gap-2 py-2 text-center ${small ? 'text-[9px]' : 'text-[10px]'} uppercase tracking-[0.22em] ${
+              active ? 'text-[#1f4d43] underline underline-offset-4' : 'text-[#2d7d6b]/75'
+            }`;
             return (
               <Fragment key={label}>
                 <button
@@ -316,18 +361,33 @@ export default function Navbar() {
                     <path d="M1 1l4 4 4-4" />
                   </svg>
                 </button>
-                {mobileShopOpen && shopItems.map(item => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    aria-current={pathname === item.href ? 'page' : undefined}
-                    className={`w-full py-2 text-center text-[10px] uppercase tracking-[0.22em] ${
-                      pathname === item.href ? 'text-[#1f4d43] underline underline-offset-4' : 'text-[#2d7d6b]/75'
-                    }`}
-                  >
-                    {item.title}
-                  </Link>
-                ))}
+                {mobileShopOpen && shopItems.map(item => {
+                  if (!item.children) {
+                    return (
+                      <Link key={item.href} href={item.href} aria-current={pathname === item.href ? 'page' : undefined}
+                        className={mobileItemClass(pathname === item.href)}>
+                        {item.title}
+                        {item.count === 0 && <span className="text-[8px] tracking-[0.15em] text-[#4ea87c]/80">soon</span>}
+                      </Link>
+                    );
+                  }
+                  const expanded = openSubmenu === item.slug;
+                  return (
+                    <Fragment key={item.href}>
+                      <button type="button" onClick={() => setOpenSubmenu(expanded ? null : item.slug)} aria-expanded={expanded}
+                        className={mobileItemClass(pathname.startsWith(item.href))}>
+                        {item.title}
+                        {chevron(expanded)}
+                      </button>
+                      {expanded && [{ slug: 'all', title: `All ${item.title}`, href: item.href }, ...item.children].map(child => (
+                        <Link key={child.href} href={child.href} aria-current={pathname === child.href ? 'page' : undefined}
+                          className={mobileItemClass(pathname === child.href, true)}>
+                          {child.title}
+                        </Link>
+                      ))}
+                    </Fragment>
+                  );
+                })}
               </Fragment>
             );
           })}

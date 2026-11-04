@@ -165,6 +165,22 @@ async function fetchSeriesCollections() {
   });
 }
 
+// The products of every collection whose handle or title matches one of `names` (any letter case),
+// de-duplicated. Used by the Shop categories (see src/data/shopCategories.js).
+export async function getCollectionArtworksMatching(names = []) {
+  const wanted = new Set(names.map(name => String(name).toLowerCase()));
+  const collections = (await fetchAllCollections()).filter(c =>
+    wanted.has(String(c.handle || '').toLowerCase()) || wanted.has(String(c.title || '').toLowerCase()));
+  const lists = await Promise.all(collections.map(c => fetchCollectionProducts(c.handle)));
+  const seen = new Set();
+  const artworks = [];
+  for (const product of lists.flat()) {
+    const artwork = shopifyToArtwork(product);
+    if (artwork && !seen.has(artwork.handle)) { seen.add(artwork.handle); artworks.push(artwork); }
+  }
+  return artworks;
+}
+
 // Every non-Portfolio/Commissions collection with its paintings, in Shopify's collection order
 export async function getCollectionsWithArtworks() {
   const collections = await fetchSeriesCollections();

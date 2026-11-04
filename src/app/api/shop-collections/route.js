@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { getShopCollections } from '@/lib/layout';
+import { getShopMenu } from '@/lib/shopCategories';
 
 export const dynamic = 'force-dynamic';
 
+// The Shop menu: each category (and sub-category) with how many pieces are for sale in it.
 export async function GET() {
-  const { tabs } = await getShopCollections();
-  return NextResponse.json(tabs.map(c => ({ handle: c.handle, title: c.title, count: c.artworks.length })));
+  return NextResponse.json(await getShopMenu());
 }

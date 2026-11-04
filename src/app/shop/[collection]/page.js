@@ -3,10 +3,14 @@ export const dynamic = 'force-dynamic';
 import { notFound } from 'next/navigation';
 import ArtworkGrid from '@/components/ArtworkGrid';
 import ShopTabs from '@/components/ShopTabs';
+import ShopCategoryView from '@/components/ShopCategoryView';
 import { getShopCollections } from '@/lib/layout';
+import { getShopCategory } from '@/lib/shopCategories';
 
 export async function generateMetadata(props) {
   const { collection } = await props.params;
+  const category = await getShopCategory(collection);
+  if (category) return { title: `${category.category.title} | The Whimsical Mark` };
   const { all } = await getShopCollections();
   const current = all.find(c => c.handle === collection);
   return { title: `${current?.title || 'Shop'} | The Whimsical Mark` };
@@ -14,7 +18,11 @@ export async function generateMetadata(props) {
 
 export default async function ShopCollectionPage(props) {
   const { collection } = await props.params;
-  const { all, tabs } = await getShopCollections();
+  // a Shop category (e.g. /shop/bookmarks)
+  const category = await getShopCategory(collection);
+  if (category) return <ShopCategoryView {...category} />;
+  // otherwise an old link to a Shopify collection still opens its page
+  const { all } = await getShopCollections();
   const current = all.find(c => c.handle === collection);
   if (!current) notFound();
 
@@ -31,7 +39,7 @@ export default async function ShopCollectionPage(props) {
         </p>
       </div>
 
-      <ShopTabs collections={tabs} active={current.handle} />
+      <ShopTabs active={null} />
 
       <div className="mx-auto max-w-6xl px-4 pb-20 sm:px-6 sm:pb-28">
         <ArtworkGrid artworks={current.artworks} emptyMessage="Nothing available in this collection right now" />
