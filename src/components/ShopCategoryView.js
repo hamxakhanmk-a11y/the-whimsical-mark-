@@ -31,7 +31,7 @@ export default function ShopCategoryView({ category, child, artworks }) {
           <div className="mx-auto max-w-md rounded-3xl border border-[#2d7d6b]/15 bg-[#fffaf2] px-8 py-14 text-center shadow-[0_18px_40px_rgba(31,77,67,.08)]">
             <p className="mb-3 text-xs uppercase tracking-[0.35em] text-[#4ea87c]">Coming soon</p>
             <p className="text-3xl font-light text-neutral-800" style={{ fontFamily: 'var(--font-cormorant)' }}>
-              New {title.toLowerCase()} are on the way
+              New {title.toLowerCase()} coming your way
             </p>
             <p className="mt-4 text-sm leading-relaxed text-neutral-500">
               Each piece is being made by hand. Check back soon, or explore what is in the shop now.

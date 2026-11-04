@@ -25,6 +25,7 @@ export const SHOP_CATEGORIES = [
       { slug: 'embroidered', title: 'Embroidered Envelopes', short: 'Embroidered', match: ['embroided-envelopes', 'embroided envelopes', 'embroidered envelopes', 'embroidered-envelopes'] },
     ],
   },
+  { slug: 'hoop-art', title: 'Hoop Art', match: ['hoop-art', 'hoop art', 'hoopart', 'hoop-arts', 'hoop arts'] },
   { slug: 'charms', title: 'Charms', match: ['charms', 'charm'] },
   {
     slug: 'bags',
@@ -33,6 +34,7 @@ export const SHOP_CATEGORIES = [
     children: [
       { slug: 'tote', title: 'Tote Bags', short: 'Tote Bags', match: ['tote-bag', 'tote bag', 'tote bags', 'tote-bags'] },
       { slug: 'vanity-essentials', title: 'Vanity Essential Bags', short: 'Vanity Essentials', match: ['vanity-essentials', 'vanity essential bags', 'vanity essentials', 'vanity-essential-bags'] },
+      { slug: 'potli', title: 'Potli Bags', short: 'Potli Bags', match: ['potli-bags', 'potli bags', 'potli-bag', 'potli bag', 'potli', 'potlis'] },
     ],
   },
 ];
