@@ -1,4 +1,5 @@
-// The Shop's categories, in menu order. Each points at Shopify collections, matched by handle or title
+// The Shop's starting categories, in menu order. The CMS Shop tab can change all of this (it saves its own
+// version in site_text "shop_categories"); these are used until it does. Each points at Shopify collections, matched by handle or title
 // (any letter case), so a collection can keep whatever name it has in Shopify; add products to it there
 // and they appear here. A category with nothing for sale shows "Coming soon".
 // A category with types (Bookmarks, Envelopes, Bags) shows everything in its types, plus anything put
@@ -38,5 +39,50 @@ export const SHOP_CATEGORIES = [
     ],
   },
 ];
+
+// A URL-friendly name ("Silk & Zari" -> "silk-and-zari").
+export const slugifyCategory = text => String(text || '').toLowerCase().replace(/&/g, ' and ')
+  .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
+
+// Tidies a category list saved from the CMS: drops nameless rows, gives each a unique URL name, keeps exactly
+// one Paintings category (the Paintings page needs it). Returns null if nothing usable is left.
+export function normalizeShopCategories(raw) {
+  if (!Array.isArray(raw)) return null;
+  const uniqueSlug = (base, used) => {
+    let slug = base || 'category';
+    for (let n = 2; used.has(slug); n++) slug = `${base || 'category'}-${n}`;
+    used.add(slug);
+    return slug;
+  };
+  const clean = (node, used) => {
+    const title = String(node?.title || '').trim().slice(0, 60);
+    if (!title) return null;
+    const match = (Array.isArray(node.match) ? node.match : [])
+      .map(name => String(name).trim().toLowerCase()).filter(Boolean).slice(0, 20);
+    const out = { slug: uniqueSlug(slugifyCategory(node.slug) || slugifyCategory(title), used), title, match };
+    const short = String(node.short || '').trim().slice(0, 40);
+    if (short) out.short = short;
+    return out;
+  };
+  const used = new Set(['all']); // "all" is the Shop All tab
+  const categories = [];
+  let hasPaintings = false;
+  for (const node of raw) {
+    const category = clean(node, used);
+    if (!category) continue;
+    if (node.paintings && !hasPaintings) {
+      category.paintings = true;
+      hasPaintings = true;
+    } else if (Array.isArray(node.children)) {
+      const childSlugs = new Set(['all']);
+      const children = node.children.map(child => clean(child, childSlugs)).filter(Boolean);
+      if (children.length) category.children = children;
+    }
+    categories.push(category);
+  }
+  if (!categories.length) return null;
+  if (!hasPaintings) categories.unshift(SHOP_CATEGORIES.find(c => c.paintings));
+  return categories;
+}
 
 export const shopHref = (category, child) => `/shop/${category.slug}${child ? `/${child.slug}` : ''}`;

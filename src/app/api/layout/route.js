@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getPortfolioItems, getCommissionItems } from '@/lib/layout';
+import { getPaintings } from '@/lib/shopCategories';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,9 +12,10 @@ function toCard(item) {
 }
 
 export async function GET() {
-  const [portfolio, commissions] = await Promise.all([getPortfolioItems(), getCommissionItems()]);
+  const [portfolio, paintings, commissions] = await Promise.all([getPortfolioItems(), getPaintings(), getCommissionItems()]);
   return NextResponse.json({
     portfolio: portfolio.map(toCard),
+    paintings: paintings.map(a => toCard({ key: `artwork:${a.handle}`, kind: 'artwork', payload: a })),
     commissions: commissions.map(toCard),
   });
 }

@@ -1,58 +1,35 @@
-import { createClient } from '@supabase/supabase-js';
 import { getPortfolioAndSeries, getCommissionArtworks, getCollectionsWithArtworks } from '@/lib/shopify';
 import { isPurchasable } from '@/lib/checkout';
+import { getSavedLayout, sortByLayout } from '@/lib/savedLayout';
+import { getPaintings } from '@/lib/shopCategories';
 
-// The CMS saves the display order as a JSON list of keys in site_text:
-//   layout_portfolio   -> ["series:starry-nights", "artwork:tannins-and-tendrils", ...]
-//   layout_commissions -> ["artwork:some-handle", ...]
-export async function getSavedLayout(section) {
-  try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    );
-    const { data } = await supabase
-      .from('site_text')
-      .select('value')
-      .eq('key', `layout_${section}`)
-      .maybeSingle();
-    const keys = JSON.parse(data?.value || '[]');
-    return Array.isArray(keys) ? keys : [];
-  } catch {
-    return [];
-  }
-}
+export { getSavedLayout, sortByLayout };
 
-// Items the CMS hasn't placed yet (e.g. a new Shopify product) go after the arranged ones.
-export function sortByLayout(items, keys) {
-  const rank = new Map(keys.map((key, index) => [key, index]));
-  return items
-    .map((item, index) => ({ item, index }))
-    .sort((a, b) => {
-      const ra = rank.has(a.item.key) ? rank.get(a.item.key) : Infinity;
-      const rb = rank.has(b.item.key) ? rank.get(b.item.key) : Infinity;
-      if (ra !== rb) return ra < rb ? -1 : 1;
-      return a.index - b.index;
-    })
-    .map(({ item }) => item);
-}
-
+// The Portfolio page: everything except the paintings (they have their own Paintings page) and commissions.
 export async function getPortfolioItems() {
-  const [{ individuals, series }, keys] = await Promise.all([
+  const [{ individuals, series }, paintings, keys] = await Promise.all([
     getPortfolioAndSeries(),
+    getPaintings(),
     getSavedLayout('portfolio'),
   ]);
+  const isPainting = new Set(paintings.map(a => a.handle));
   const items = [
-    ...series.map(s => ({ key: `series:${s.slug}`, kind: 'series', payload: s })),
-    ...individuals.map(a => ({ key: `artwork:${a.handle}`, kind: 'artwork', payload: a })),
+    ...series
+      .map(s => ({ ...s, artworks: s.artworks.filter(a => !isPainting.has(a.handle)) }))
+      .filter(s => s.artworks.length > 0)
+      .map(s => ({ key: `series:${s.slug}`, kind: 'series', payload: { ...s, cover_image: s.artworks[0].image_url || s.cover_image } })),
+    ...individuals
+      .filter(a => !isPainting.has(a.handle))
+      .map(a => ({ key: `artwork:${a.handle}`, kind: 'artwork', payload: a })),
   ];
   return sortByLayout(items, keys);
 }
 
-// Shop: every painting that can be bought, in the Portfolio layout order
-// (a series expands in place into its paintings).
+// Shop All: everything that can be bought: the paintings first (in their CMS order), then the rest
+// in the Portfolio order (a series expands in place into its pieces).
 export async function getShopArtworks() {
-  const items = await getPortfolioItems();
+  const [paintings, portfolio] = await Promise.all([getPaintings(), getPortfolioItems()]);
+  const items = [...paintings.map(a => ({ kind: 'artwork', payload: a })), ...portfolio];
   const seen = new Set();
   const artworks = [];
   for (const item of items) {

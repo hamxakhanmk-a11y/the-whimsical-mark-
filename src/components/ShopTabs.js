@@ -1,11 +1,13 @@
 import Link from 'next/link';
-import { SHOP_CATEGORIES, shopHref } from '@/data/shopCategories';
+import { shopHref } from '@/data/shopCategories';
+import { getShopTree } from '@/lib/shopCategories';
 
 // The Shop's category tabs ("Shop All" and each category); on a category with sub-categories (Bookmarks)
 // a second row shows them.
-export default function ShopTabs({ active = 'all', activeSub = null }) {
-  const tabs = [{ slug: 'all', title: 'Shop All', href: '/shop' }, ...SHOP_CATEGORIES.map(c => ({ slug: c.slug, title: c.title, href: shopHref(c) }))];
-  const current = SHOP_CATEGORIES.find(c => c.slug === active);
+export default async function ShopTabs({ active = 'all', activeSub = null }) {
+  const categories = await getShopTree();
+  const tabs = [{ slug: 'all', title: 'Shop All', href: '/shop' }, ...categories.map(c => ({ slug: c.slug, title: c.title, href: shopHref(c) }))];
+  const current = categories.find(c => c.slug === active);
   const subTabs = current?.children
     ? [
         { slug: null, title: `All ${current.title}`, href: shopHref(current) },

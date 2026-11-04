@@ -167,6 +167,11 @@ async function fetchSeriesCollections() {
 
 // The products of every collection whose handle or title matches one of `names` (any letter case),
 // de-duplicated. Used by the Shop categories (see src/data/shopCategories.js).
+// Every Shopify collection (for the CMS Shop tab): handle, title, how many products.
+export async function listShopifyCollections() {
+  return (await fetchAllCollections()).map(c => ({ handle: c.handle, title: c.title, count: c.products_count ?? null }));
+}
+
 export async function getCollectionArtworksMatching(names = []) {
   const wanted = new Set(names.map(name => String(name).toLowerCase()));
   const collections = (await fetchAllCollections()).filter(c =>

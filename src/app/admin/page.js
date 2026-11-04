@@ -5,6 +5,7 @@ import { siteConfig } from '@/data/config';
 import ImageCropper from '@/components/ImageCropper';
 import HeroStageEditor from '@/components/HeroStageEditor';
 import HeroMedia, { isVideoSource } from '@/components/HeroMedia';
+import ShopCategoriesEditor from '@/components/ShopCategoriesEditor';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
@@ -167,7 +168,7 @@ export default function AdminPage() {
 
   const [activeTab, setActiveTab] = useState('dashboard');
   const [layoutSection, setLayoutSection] = useState('portfolio');
-  const [layoutOrders, setLayoutOrders] = useState({ portfolio: [], commissions: [] });
+  const [layoutOrders, setLayoutOrders] = useState({ portfolio: [], paintings: [], commissions: [] });
   const [draggedArtworkId, setDraggedArtworkId] = useState(null);
   const [layoutMsg, setLayoutMsg] = useState('');
   const [savingLayout, setSavingLayout] = useState(false);
@@ -453,6 +454,7 @@ export default function AdminPage() {
       const data = await res.json();
       setLayoutOrders({
         portfolio: Array.isArray(data.portfolio) ? data.portfolio : [],
+        paintings: Array.isArray(data.paintings) ? data.paintings : [],
         commissions: Array.isArray(data.commissions) ? data.commissions : [],
       });
     } catch {
@@ -824,7 +826,7 @@ export default function AdminPage() {
 
       {/* Tabs */}
       <div className="flex gap-5 overflow-x-auto border-b border-neutral-200 bg-white px-4 sm:gap-8 sm:px-6">
-        {[['dashboard', 'Dashboard'], ['artworks', 'Artworks'], ['layout', 'Layout'], ['shows', 'Shows'], ['about', 'About'], ['contact', 'Contact'], ['photos', 'Site Photos']].map(([key, label]) => (
+        {[['dashboard', 'Dashboard'], ['artworks', 'Artworks'], ['layout', 'Layout'], ['shop', 'Shop'], ['shows', 'Shows'], ['about', 'About'], ['contact', 'Contact'], ['photos', 'Site Photos']].map(([key, label]) => (
           <button
             key={key}
             onClick={() => setActiveTab(key)}
@@ -850,14 +852,15 @@ export default function AdminPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-5">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-5">
               {[
                 ['Artworks', artworks.length, 'artworks'],
                 ['Portfolio', layoutOrders.portfolio.length, 'layout'],
+                ['Paintings', layoutOrders.paintings.length, 'layout'],
                 ['Commissions', layoutOrders.commissions.length, 'layout'],
                 ['Shows', shows.length, 'shows'],
               ].map(([label, count, tab]) => (
-                <button key={label} onClick={() => { setActiveTab(tab); if (label === 'Portfolio') setLayoutSection('portfolio'); if (label === 'Commissions') setLayoutSection('commissions'); }}
+                <button key={label} onClick={() => { setActiveTab(tab); if (tab === 'layout') { setLayoutSection(label.toLowerCase()); setLayoutMsg(''); } }}
                   className="border border-neutral-200 bg-white p-4 text-left transition-colors hover:border-neutral-500 sm:p-6">
                   <span className="block text-3xl font-light text-neutral-800" style={{ fontFamily: 'var(--font-cormorant)' }}>{count}</span>
                   <span className="mt-1 block text-[10px] uppercase tracking-[0.18em] text-neutral-400">{label}</span>
@@ -871,6 +874,7 @@ export default function AdminPage() {
                 {[
                   ['+ Add Artwork', 'artworks'],
                   ['Arrange Paintings', 'layout'],
+                  ['Edit Shop Categories', 'shop'],
                   ['Manage Shows', 'shows'],
                   ['Edit About', 'about'],
                   ['Edit Contact Details', 'contact'],
@@ -895,11 +899,12 @@ export default function AdminPage() {
               <p className="mt-3 max-w-2xl text-sm leading-relaxed text-neutral-500">
                 Drag paintings into position. On a phone, use the arrow buttons. The first card appears first on the public page.
                 Paintings come from Shopify — a new product shows up at the end here until you move it and save.
+                Portfolio is everything except the paintings; Paintings is the Paintings page (and the start of Shop All).
               </p>
             </div>
 
             <div className="flex border-b border-neutral-200">
-              {['portfolio', 'commissions'].map(section => (
+              {['portfolio', 'paintings', 'commissions'].map(section => (
                 <button key={section} onClick={() => { setLayoutSection(section); setLayoutMsg(''); }}
                   className={`border-b-2 px-5 py-3 text-xs uppercase tracking-[0.18em] ${layoutSection === section ? 'border-neutral-900 text-neutral-900' : 'border-transparent text-neutral-400'}`}>
                   {section} ({layoutOrders[section].length})
@@ -953,6 +958,9 @@ export default function AdminPage() {
             </div>
           </div>
         )}
+
+        {/* ═══════════════ SHOP CATEGORIES ═══════════════ */}
+        {activeTab === 'shop' && <ShopCategoriesEditor token={token} />}
 
         {/* ═══════════════ ARTWORKS TAB ═══════════════ */}
         {activeTab === 'artworks' && (
