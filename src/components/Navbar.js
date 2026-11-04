@@ -20,9 +20,12 @@ const links = [
   { label: 'Portfolio', href: '/portfolio' },
   { label: 'Commissions', href: '/commissions' },
   { label: 'Shows', href: '/shows' },
-  { label: 'About', href: '/about' },
-  { label: 'Contact', href: '/contact' },
+  { label: 'About', href: '/about', children: [{ label: 'About', href: '/about' }, { label: 'Contact', href: '/contact' }] },
 ];
+
+// the top tab a page belongs to (Contact belongs to About)
+const topHrefFor = path => links.find(({ href, children }) => [href, ...(children || []).map(c => c.href)]
+  .some(h => (h === '/' ? path === '/' : path.startsWith(h))))?.href || '/';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -32,9 +35,8 @@ export default function Navbar() {
   const [flowReady, setFlowReady] = useState(false);
   const [shopMenu, setShopMenu] = useState(STATIC_SHOP_MENU);
   const [openSubmenu, setOpenSubmenu] = useState(null); // a category whose types are showing (Bookmarks)
-  const [shopMenuOpen, setShopMenuOpen] = useState(false);
-  const [mobileShopOpen, setMobileShopOpen] = useState(false);
-  const shopMenuRef = useRef(null);
+  const [openMenu, setOpenMenu] = useState(null); // desktop: 'shop' or 'about'
+  const [mobileOpenMenu, setMobileOpenMenu] = useState(null); // phone menu: 'shop' or 'about'
   const pathname = usePathname();
   const router = useRouter();
   const { count: cartCount, open: cartOpen, setOpen: setCartOpen } = useCart();
@@ -42,9 +44,7 @@ export default function Navbar() {
   const mobileNavRef = useRef(null);
   const flowTimer = useRef(null);
   const overlayHero = pathname === '/' && !scrolled && !open;
-  const currentHref = pendingHref || links.find(({ href }) => (
-    href === '/' ? pathname === '/' : pathname.startsWith(href)
-  ))?.href || '/';
+  const currentHref = topHrefFor(pendingHref || pathname);
 
   useEffect(() => {
     const onScroll = () => {
@@ -67,8 +67,8 @@ export default function Navbar() {
     const frame = window.requestAnimationFrame(() => {
       setPendingHref(null);
       setOpen(false);
-      setShopMenuOpen(false);
-      setMobileShopOpen(false);
+      setOpenMenu(null);
+      setMobileOpenMenu(null);
       setOpenSubmenu(null);
     });
     return () => window.cancelAnimationFrame(frame);
@@ -83,20 +83,20 @@ export default function Navbar() {
     return () => { cancelled = true; };
   }, []);
 
-  // Close the Shop dropdown on a click anywhere outside it, or on Escape.
+  // Close an open menu (Shop / About) on a click anywhere outside it, or on Escape.
   useEffect(() => {
-    if (!shopMenuOpen) return;
+    if (!openMenu) return;
     const onPointerDown = event => {
-      if (!shopMenuRef.current?.contains(event.target)) setShopMenuOpen(false);
+      if (!event.target.closest?.(`[data-nav-menu="${openMenu}"]`)) setOpenMenu(null);
     };
-    const onKeyDown = event => { if (event.key === 'Escape') setShopMenuOpen(false); };
+    const onKeyDown = event => { if (event.key === 'Escape') setOpenMenu(null); };
     document.addEventListener('pointerdown', onPointerDown);
     document.addEventListener('keydown', onKeyDown);
     return () => {
       document.removeEventListener('pointerdown', onPointerDown);
       document.removeEventListener('keydown', onKeyDown);
     };
-  }, [shopMenuOpen]);
+  }, [openMenu]);
 
   useEffect(() => {
     // Measured from on-screen centres (not offsetLeft) so links can sit inside wrappers like the
@@ -132,7 +132,7 @@ export default function Navbar() {
       window.cancelAnimationFrame(frame);
       window.removeEventListener('resize', syncIndicators);
     };
-  }, [currentHref, open, mobileShopOpen, shopMenu]);
+  }, [currentHref, open, mobileOpenMenu, openSubmenu, shopMenu]);
 
   useEffect(() => () => {
     window.clearTimeout(flowTimer.current);
@@ -158,8 +158,16 @@ export default function Navbar() {
 
   // how many pieces a category has for sale, or "soon" while it has none
   const countLabel = item => (item.count === undefined ? null : item.count > 0
-    ? <span className="text-[10px] tracking-normal text-neutral-400">{item.count}</span>
-    : <span className="text-[9px] tracking-[0.15em] text-[#4ea87c]/80">soon</span>);
+    ? <span className="text-[11px] font-semibold tracking-normal text-[#2d7d6b]">{item.count}</span>
+    : <span className="rounded-full bg-[#4ea87c]/15 px-2 py-0.5 text-[9px] font-semibold tracking-[0.12em] text-[#2d7d6b]">soon</span>);
+  // the dropdown panel and its rows (Shop and About menus)
+  const panelClass = 'rounded-2xl border border-[#2d7d6b]/20 bg-[#fffaf2] p-2 shadow-[0_20px_44px_rgba(31,77,67,.28)]';
+  const rowClass = active => `flex w-full items-center justify-between gap-6 rounded-xl px-4 py-2.5 text-[12px] font-medium uppercase tracking-[0.16em] transition-colors hover:bg-[#4ea87c]/15 ${
+    active ? 'bg-[#4ea87c]/15 text-[#173f36]' : 'text-[#1f4d43]'
+  }`;
+  const dropdownClass = isOpen => `absolute left-1/2 top-full z-50 -translate-x-1/2 pt-2 transition duration-200 ${
+    isOpen ? 'visible translate-y-0 opacity-100' : 'pointer-events-none invisible -translate-y-1 opacity-0'
+  }`;
   const chevron = turned => (
     <svg className={`h-2 w-2.5 shrink-0 transition-transform duration-300 ${turned ? 'rotate-180' : ''}`} viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M1 1l4 4 4-4" />
@@ -246,37 +254,64 @@ export default function Navbar() {
               {label}
             </Link>
           );
+          const menuButton = (name, isOpen) => (
+            <button
+              type="button"
+              onClick={() => setOpenMenu(value => (value === name ? null : name))}
+              aria-haspopup="true"
+              aria-expanded={isOpen}
+              className={`nav-flow-link flex items-center gap-1.5 px-3 py-2 text-[11px] tracking-[0.2em] uppercase lg:px-4 lg:text-xs lg:tracking-[0.25em] ${currentHref === href ? 'nav-flow-link--active' : ''}`}
+              style={{ color: currentHref === href || overlayHero ? '#fffaf2' : 'var(--color-ocean)' }}
+            >
+              {label}
+              {chevron(isOpen)}
+            </button>
+          );
+
+          // About opens a small menu: About and Contact.
+          if (links.find(l => l.href === href)?.children) {
+            const isOpen = openMenu === 'about';
+            return (
+              <div key={label} data-nav-menu="about" className="relative flex">
+                {menuButton('about', isOpen)}
+                <div className={dropdownClass(isOpen)}>
+                  <div className={`min-w-44 ${panelClass}`}>
+                    {links.find(l => l.href === href).children.map(child => (
+                      <Link key={child.href} href={child.href} prefetch={true}
+                        onClick={event => { setOpenMenu(null); changePage(event, child.href); }}
+                        aria-current={pathname === child.href ? 'page' : undefined} className={rowClass(pathname === child.href)}>
+                        <span className="whitespace-nowrap">{child.label}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
           if (href !== '/shop') return link;
 
           // Shop opens its category menu on click instead of navigating.
+          const shopOpen = openMenu === 'shop';
           return (
-            <div key={label} ref={shopMenuRef} className="relative flex">
+            <div key={label} data-nav-menu="shop" className="relative flex">
               <button
                 type="button"
-                onClick={() => setShopMenuOpen(value => !value)}
+                onClick={() => setOpenMenu(value => (value === 'shop' ? null : 'shop'))}
                 aria-haspopup="true"
-                aria-expanded={shopMenuOpen}
+                aria-expanded={shopOpen}
                 className={`nav-flow-link flex items-center gap-1.5 px-3 py-2 text-[11px] tracking-[0.2em] uppercase lg:px-4 lg:text-xs lg:tracking-[0.25em] ${currentHref === href ? 'nav-flow-link--active' : ''}`}
                 style={{ color: currentHref === href || overlayHero ? '#fffaf2' : 'var(--color-ocean)' }}
               >
                 {label}
-                <svg className={`h-2 w-2.5 transition-transform duration-300 ${shopMenuOpen ? 'rotate-180' : ''}`} viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M1 1l4 4 4-4" />
-                </svg>
+                {chevron(shopOpen)}
               </button>
-              <div
-                className={`absolute left-1/2 top-full z-50 -translate-x-1/2 pt-2 transition duration-200 ${
-                  shopMenuOpen ? 'visible translate-y-0 opacity-100' : 'pointer-events-none invisible -translate-y-1 opacity-0'
-                }`}
-              >
-                <div className="min-w-60 rounded-2xl border border-[#2d7d6b]/15 bg-[#fffaf2]/95 p-2 shadow-[0_18px_40px_rgba(31,77,67,.18)] backdrop-blur-md">
+              <div className={dropdownClass(shopOpen)}>
+                <div className={`min-w-64 ${panelClass}`}>
                   {[{ slug: 'all', title: 'Shop All', href: '/shop' }, ...shopMenu].map(item => {
-                    const rowClass = active => `flex w-full items-center justify-between gap-6 rounded-xl px-4 py-2.5 text-[11px] uppercase tracking-[0.2em] transition-colors hover:bg-[#4ea87c]/12 ${
-                      active ? 'bg-[#4ea87c]/12 text-[#1f4d43]' : 'text-[#2d7d6b]'
-                    }`;
                     if (!item.children) {
                       return (
-                        <Link key={item.href} href={item.href} onClick={() => setShopMenuOpen(false)}
+                        <Link key={item.href} href={item.href} onClick={() => setOpenMenu(null)}
                           aria-current={pathname === item.href ? 'page' : undefined} className={rowClass(pathname === item.href)}>
                           <span className="whitespace-nowrap">{item.title}</span>
                           {countLabel(item)}
@@ -293,12 +328,12 @@ export default function Navbar() {
                           <span className="flex items-center gap-2">{countLabel(item)}{chevron(expanded)}</span>
                         </button>
                         {expanded && (
-                          <div className="mb-1 ml-3 border-l border-[#4ea87c]/25 pl-2">
+                          <div className="mb-1 ml-3 border-l-2 border-[#4ea87c]/35 pl-2">
                             {[{ slug: 'all', title: `All ${item.title}`, href: item.href, count: item.count }, ...item.children].map(child => (
-                              <Link key={child.href} href={child.href} onClick={() => setShopMenuOpen(false)}
+                              <Link key={child.href} href={child.href} onClick={() => setOpenMenu(null)}
                                 aria-current={pathname === child.href ? 'page' : undefined}
-                                className={`flex items-center justify-between gap-6 rounded-xl px-3 py-2 text-[10px] uppercase tracking-[0.18em] transition-colors hover:bg-[#4ea87c]/12 ${
-                                  pathname === child.href ? 'bg-[#4ea87c]/12 text-[#1f4d43]' : 'text-[#2d7d6b]/85'
+                                className={`flex items-center justify-between gap-6 rounded-xl px-3 py-2 text-[11px] font-medium uppercase tracking-[0.14em] transition-colors hover:bg-[#4ea87c]/15 ${
+                                  pathname === child.href ? 'bg-[#4ea87c]/15 text-[#173f36]' : 'text-[#1f4d43]'
                                 }`}>
                                 <span className="whitespace-nowrap">{child.title}</span>
                                 {countLabel(child)}
@@ -327,6 +362,37 @@ export default function Navbar() {
             const linkClass = `nav-flow-link w-full py-3 text-center text-xs uppercase tracking-[0.25em] ${currentHref === href ? 'nav-flow-link--active' : ''}`;
             const linkStyle = { color: currentHref === href ? '#fffaf2' : 'var(--color-ocean)' };
 
+            const mobileItemClass = (active, small = false) => `flex w-full items-center justify-center gap-2 py-2.5 text-center ${small ? 'text-[11px]' : 'text-[12px]'} font-medium uppercase tracking-[0.18em] ${
+              active ? 'text-[#173f36] underline decoration-[#4ea87c] decoration-2 underline-offset-[6px]' : 'text-[#1f4d43]'
+            }`;
+            const mobileMenuButton = name => (
+              <button
+                type="button"
+                onClick={() => setMobileOpenMenu(value => (value === name ? null : name))}
+                aria-expanded={mobileOpenMenu === name}
+                className={`${linkClass} flex items-center justify-center gap-2`}
+                style={linkStyle}
+              >
+                {label}
+                {chevron(mobileOpenMenu === name)}
+              </button>
+            );
+
+            const aboutLink = links.find(l => l.href === href);
+            if (aboutLink?.children) {
+              return (
+                <Fragment key={label}>
+                  {mobileMenuButton('about')}
+                  {mobileOpenMenu === 'about' && aboutLink.children.map(child => (
+                    <Link key={child.href} href={child.href} prefetch={true} onClick={event => changePage(event, child.href)}
+                      aria-current={pathname === child.href ? 'page' : undefined} className={mobileItemClass(pathname === child.href)}>
+                      {child.label}
+                    </Link>
+                  ))}
+                </Fragment>
+              );
+            }
+
             if (href !== '/shop') {
               return (
                 <Link
@@ -344,30 +410,16 @@ export default function Navbar() {
             }
 
             const shopItems = [{ slug: 'all', title: 'Shop All', href: '/shop' }, ...shopMenu];
-            const mobileItemClass = (active, small = false) => `flex w-full items-center justify-center gap-2 py-2 text-center ${small ? 'text-[9px]' : 'text-[10px]'} uppercase tracking-[0.22em] ${
-              active ? 'text-[#1f4d43] underline underline-offset-4' : 'text-[#2d7d6b]/75'
-            }`;
             return (
               <Fragment key={label}>
-                <button
-                  type="button"
-                  onClick={() => setMobileShopOpen(value => !value)}
-                  aria-expanded={mobileShopOpen}
-                  className={`${linkClass} flex items-center justify-center gap-2`}
-                  style={linkStyle}
-                >
-                  {label}
-                  <svg className={`h-2 w-2.5 transition-transform duration-300 ${mobileShopOpen ? 'rotate-180' : ''}`} viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M1 1l4 4 4-4" />
-                  </svg>
-                </button>
-                {mobileShopOpen && shopItems.map(item => {
+                {mobileMenuButton('shop')}
+                {mobileOpenMenu === 'shop' && shopItems.map(item => {
                   if (!item.children) {
                     return (
                       <Link key={item.href} href={item.href} aria-current={pathname === item.href ? 'page' : undefined}
                         className={mobileItemClass(pathname === item.href)}>
                         {item.title}
-                        {item.count === 0 && <span className="text-[8px] tracking-[0.15em] text-[#4ea87c]/80">soon</span>}
+                        {item.count === 0 && <span className="rounded-full bg-[#4ea87c]/15 px-2 py-0.5 text-[8px] font-semibold tracking-[0.12em] text-[#2d7d6b]">soon</span>}
                       </Link>
                     );
                   }

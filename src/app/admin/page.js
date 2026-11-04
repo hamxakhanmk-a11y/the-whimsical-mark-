@@ -141,7 +141,8 @@ const heroTextDefaults = {
 const heroStageDefaults = { ...heroCameraDefaults, ...heroTextDefaults };
 
 export default function AdminPage() {
-  const [token, setToken] = useState(() => typeof window === 'undefined' ? null : localStorage.getItem('admin_token'));
+  const [token, setToken] = useState(null);
+  const [sessionChecked, setSessionChecked] = useState(false); // saved login read from this browser yet?
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
 
@@ -510,6 +511,14 @@ export default function AdminPage() {
   }
 
   useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      try { setToken(localStorage.getItem('admin_token')); } catch {}
+      setSessionChecked(true);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
     if (token) void loadAll(token);
     // The data loaders are stable page functions and only need to run when the session changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -764,6 +773,8 @@ export default function AdminPage() {
   }
 
   // ── Login screen ───────────────────────────────────────────
+  if (!sessionChecked) return <div className="min-h-screen bg-white" />;
+
   if (!token) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white px-4 sm:px-6">

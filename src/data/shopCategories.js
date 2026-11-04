@@ -27,6 +27,7 @@ export const SHOP_CATEGORIES = [
     ],
   },
   { slug: 'hoop-art', title: 'Hoop Art', match: ['hoop-art', 'hoop art', 'hoopart', 'hoop-arts', 'hoop arts'] },
+  { slug: 'nikkahnama', title: 'Nikkahnama', match: ['nikkahnama', 'nikahnama', 'nikkah nama', 'nikah nama', 'nikkah-nama', 'nikah-nama', 'nikkahnamas', 'nikahnamas'] },
   { slug: 'charms', title: 'Charms', match: ['charms', 'charm'] },
   {
     slug: 'bags',

@@ -4,14 +4,15 @@ import PurchaseButtons from '@/components/PurchaseButtons';
 import { isRoundArtwork } from '@/data/artworkPresentation';
 import { isPurchasable } from '@/lib/checkout';
 
-export default function ArtworkEditorialView({ artwork, images, whatsappNumber }) {
+export default function ArtworkEditorialView({ artwork, images, whatsappNumber, back }) {
   const cover = images[0];
   const secondary = images.slice(1);
   const projectNumber = String(artwork.display_order || artwork.id || 1).padStart(2, '0');
   const isCommission = artwork.section === 'commissions';
   const roundArtwork = isRoundArtwork(artwork);
-  const backHref = isCommission ? '/commissions' : '/portfolio';
-  const backLabel = isCommission ? 'Commissions' : 'Portfolio';
+  // where "← back" goes: the page this piece is shown on (Paintings, Commissions or Portfolio)
+  const backHref = back?.href || (isCommission ? '/commissions' : '/portfolio');
+  const backLabel = back?.label || (isCommission ? 'Commissions' : 'Portfolio');
   const whatsappMsg = encodeURIComponent(
     `Hi! I'm interested in "${artwork.title}"${artwork.price ? ` (${artwork.price})` : ''}. Is it available?`,
   );

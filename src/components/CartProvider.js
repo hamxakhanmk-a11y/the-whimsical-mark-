@@ -12,11 +12,14 @@ export function CartProvider({ children }) {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      if (Array.isArray(saved)) setItems(saved.filter(item => item && item.variantId));
-    } catch {}
-    setLoaded(true);
+    const frame = window.requestAnimationFrame(() => {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        if (Array.isArray(saved)) setItems(saved.filter(item => item && item.variantId));
+      } catch {}
+      setLoaded(true);
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   useEffect(() => {

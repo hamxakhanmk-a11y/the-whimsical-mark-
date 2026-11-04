@@ -4,7 +4,8 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import ArtworkEditorialView from '@/components/ArtworkEditorialView';
 import { siteConfig } from '@/data/config';
-import { getArtworkByHandle } from '@/lib/shopify';
+import { getArtworkByHandle, getCommissionArtworks } from '@/lib/shopify';
+import { getPaintings } from '@/lib/shopCategories';
 
 async function getWhatsapp() {
   try {
@@ -23,12 +24,19 @@ async function getWhatsapp() {
 
 export default async function ArtworkDetailPage(props) {
   const { id } = await props.params; // "id" is actually the Shopify handle
-  const [artwork, whatsapp] = await Promise.all([
+  const [artwork, whatsapp, paintings, commissions] = await Promise.all([
     getArtworkByHandle(id),
     getWhatsapp(),
+    getPaintings(),
+    getCommissionArtworks(),
   ]);
 
   if (!artwork) notFound();
+
+  // "← back" leads to the page this piece is shown on
+  const back = paintings.some(a => a.handle === artwork.handle) ? { href: '/paintings', label: 'Paintings' }
+    : artwork.section === 'commissions' || commissions.some(a => a.handle === artwork.handle) ? { href: '/commissions', label: 'Commissions' }
+    : { href: '/portfolio', label: 'Portfolio' };
 
   const whatsappNumber = String(whatsapp || '').replace(/\D/g, '');
 
@@ -38,6 +46,7 @@ export default async function ArtworkDetailPage(props) {
         artwork={artwork}
         images={artwork.images}
         whatsappNumber={whatsappNumber}
+        back={back}
       />
     </>
   );
