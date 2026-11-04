@@ -20,7 +20,8 @@ export async function getPaintings() {
 async function artworksFor(node) {
   if (node.paintings) return getPaintings();
   if (node.children) {
-    const lists = await Promise.all(node.children.map(artworksFor));
+    // everything in its types, plus anything put straight into the category's own collection
+    const lists = await Promise.all([...node.children.map(artworksFor), getCollectionArtworksMatching(node.match || [])]);
     const seen = new Set();
     return lists.flat().filter(a => !seen.has(a.handle) && seen.add(a.handle));
   }
@@ -47,9 +48,7 @@ export async function getShopMenu() {
           count: (await artworksFor(child)).filter(isPurchasable).length,
         })))
       : undefined;
-    const count = children
-      ? children.reduce((sum, child) => sum + child.count, 0)
-      : (await artworksFor(category)).filter(isPurchasable).length;
+    const count = (await artworksFor(category)).filter(isPurchasable).length;
     return { slug: category.slug, title: category.title, href: shopHref(category), count, children };
   }));
 }

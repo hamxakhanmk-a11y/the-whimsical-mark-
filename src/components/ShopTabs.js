@@ -9,7 +9,7 @@ export default function ShopTabs({ active = 'all', activeSub = null }) {
   const subTabs = current?.children
     ? [
         { slug: null, title: `All ${current.title}`, href: shopHref(current) },
-        ...current.children.map(child => ({ slug: child.slug, title: child.title.replace(` ${current.title}`, ''), href: shopHref(current, child) })),
+        ...current.children.map(child => ({ slug: child.slug, title: child.short || child.title, href: shopHref(current, child) })),
       ]
     : null;
 
