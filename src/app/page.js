@@ -5,6 +5,7 @@ import Gallery from "@/components/Gallery";
 import Contact from "@/components/Contact";
 import CommissionInquiry from "@/components/CommissionInquiry";
 import WaterSurface from "@/components/WaterSurface";
+import Reviews from "@/components/Reviews";
 
 export default function Home() {
   return (
@@ -14,6 +15,7 @@ export default function Home() {
         <Hero />
         <Gallery />
         <CommissionInquiry compact />
+        <Reviews />
         <Contact />
       </main>
     </>

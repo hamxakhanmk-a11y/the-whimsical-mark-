@@ -6,6 +6,7 @@ import ImageCropper from '@/components/ImageCropper';
 import HeroStageEditor from '@/components/HeroStageEditor';
 import HeroMedia, { isVideoSource } from '@/components/HeroMedia';
 import ShopCategoriesEditor from '@/components/ShopCategoriesEditor';
+import ReviewsManager from '@/components/ReviewsManager';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
@@ -837,7 +838,7 @@ export default function AdminPage() {
 
       {/* Tabs */}
       <div className="flex gap-5 overflow-x-auto border-b border-neutral-200 bg-white px-4 sm:gap-8 sm:px-6">
-        {[['dashboard', 'Dashboard'], ['artworks', 'Artworks'], ['layout', 'Layout'], ['shop', 'Shop'], ['shows', 'Shows'], ['about', 'About'], ['contact', 'Contact'], ['photos', 'Site Photos']].map(([key, label]) => (
+        {[['dashboard', 'Dashboard'], ['artworks', 'Artworks'], ['layout', 'Layout'], ['shop', 'Shop'], ['reviews', 'Reviews'], ['shows', 'Shows'], ['about', 'About'], ['contact', 'Contact'], ['photos', 'Site Photos']].map(([key, label]) => (
           <button
             key={key}
             onClick={() => setActiveTab(key)}
@@ -886,6 +887,7 @@ export default function AdminPage() {
                   ['+ Add Artwork', 'artworks'],
                   ['Arrange Paintings', 'layout'],
                   ['Edit Shop Categories', 'shop'],
+                  ['Manage Reviews', 'reviews'],
                   ['Manage Shows', 'shows'],
                   ['Edit About', 'about'],
                   ['Edit Contact Details', 'contact'],
@@ -972,6 +974,9 @@ export default function AdminPage() {
 
         {/* ═══════════════ SHOP CATEGORIES ═══════════════ */}
         {activeTab === 'shop' && <ShopCategoriesEditor token={token} />}
+
+        {/* ═══════════════ REVIEWS ═══════════════ */}
+        {activeTab === 'reviews' && <ReviewsManager token={token} />}
 
         {/* ═══════════════ ARTWORKS TAB ═══════════════ */}
         {activeTab === 'artworks' && (
