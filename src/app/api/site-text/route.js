@@ -14,7 +14,8 @@ export async function GET() {
   const { data, error } = await supabase.from('site_text').select('key,value');
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   const result = {};
-  (data || []).forEach(row => { result[row.key] = row.value; });
+  // The reviews list (hidden ones included) is served only through /api/reviews.
+  (data || []).forEach(row => { if (row.key !== 'reviews') result[row.key] = row.value; });
   return NextResponse.json(result);
 }
 

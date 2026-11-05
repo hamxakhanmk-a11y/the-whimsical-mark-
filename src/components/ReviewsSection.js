@@ -29,7 +29,7 @@ export default function ReviewsSection({ initialReviews = [] }) {
   const [reviews, setReviews] = useState(initialReviews);
   const [shown, setShown] = useState(PAGE);
   const [formOpen, setFormOpen] = useState(false);
-  const [form, setForm] = useState({ name: '', rating: 0, message: '', website: '' });
+  const [form, setForm] = useState({ name: '', rating: 0, message: '', trap: '' });
   const [hoverRating, setHoverRating] = useState(0);
   const [startedAt, setStartedAt] = useState(0);
   const [status, setStatus] = useState({ state: 'idle', text: '' });
@@ -61,12 +61,12 @@ export default function ReviewsSection({ initialReviews = [] }) {
       const response = await fetch('/api/reviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, startedAt }),
+        body: JSON.stringify({ ...form, elapsed: Date.now() - startedAt }),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || 'Could not post your review. Please try again.');
       if (data.review) setReviews(current => [data.review, ...current]);
-      setForm({ name: '', rating: 0, message: '', website: '' });
+      setForm({ name: '', rating: 0, message: '', trap: '' });
       setFormOpen(false);
       setStatus({
         state: 'done',
@@ -163,7 +163,7 @@ export default function ReviewsSection({ initialReviews = [] }) {
 
             {/* hidden from people; bots fill it in */}
             <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
-              <label>Website<input tabIndex={-1} autoComplete="off" value={form.website} onChange={e => setForm(f => ({ ...f, website: e.target.value }))} /></label>
+              <label>Leave this empty<input tabIndex={-1} autoComplete="off" data-lpignore="true" data-1p-ignore value={form.trap} onChange={e => setForm(f => ({ ...f, trap: e.target.value }))} /></label>
             </div>
 
             {status.state === 'error' && <p role="alert" className="mb-4 text-center text-sm text-red-600">{status.text}</p>}

@@ -37,11 +37,13 @@ export async function GET(req) {
 // Anyone: post a review.
 export async function POST(req) {
   let body;
-  try { body = await req.json(); } catch { return fail('Something went wrong. Please try again.'); }
+  try { body = await req.json(); } catch { body = null; }
+  if (!body || typeof body !== 'object') return fail('Something went wrong. Please try again.');
 
-  // Bots fill in the hidden "website" field, or send the form instantly; quietly accept and drop those.
-  const startedAt = Number(body.startedAt);
-  if (body.website || !startedAt || Date.now() - startedAt < 3000) return NextResponse.json({ ok: true, pending: true });
+  // Bots fill in the hidden trap field, or send the form instantly; quietly accept and drop those.
+  // (How long the form was open is measured on the visitor's own device, so a wrong clock doesn't matter.)
+  const elapsed = Number(body.elapsed);
+  if (body.trap || !(elapsed >= 3000)) return NextResponse.json({ ok: true, pending: true });
 
   const name = String(body.name || '').replace(/\s+/g, ' ').trim().slice(0, REVIEW_LIMITS.name);
   const message = String(body.message || '').replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
